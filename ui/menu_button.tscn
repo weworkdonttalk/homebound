@@ -1,0 +1,15 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://ui/menu_button.gd" id="1_script"]
+[ext_resource type="FontFile" uid="uid://c3kq8wv1m0r5d" path="res://fonts/SpecialElite-Regular.ttf" id="2_display"]
+
+[node name="MenuButton" type="Button"]
+custom_minimum_size = Vector2(0, 52)
+offset_right = 340.0
+offset_bottom = 52.0
+focus_mode = 2
+mouse_default_cursor_shape = 2
+script = ExtResource("1_script")
+label_text = "NEW GAME"
+display_font = ExtResource("2_display")
+tracking = 2.0

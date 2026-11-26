@@ -1,0 +1,445 @@
+[gd_scene format=3 uid="uid://bbs0lqvhvo7e2"]
+
+[ext_resource type="Script" uid="uid://dmw2ax6lpx8tw" path="res://main_menu_ui.gd" id="1_script"]
+[ext_resource type="Shader" uid="uid://cvt3dio7vftfg" path="res://ui/atmosphere.gdshader" id="2_atmosphere"]
+[ext_resource type="FontFile" uid="uid://bl2n0bgsd3v3a" path="res://fonts/AmaticSC-Bold.ttf" id="4_bycpm"]
+[ext_resource type="Shader" uid="uid://b4vah7ume11e7" path="res://ui/film_grain.gdshader" id="4_grain"]
+[ext_resource type="FontFile" uid="uid://c3kq8wv1m0r5d" path="res://fonts/SpecialElite-Regular.ttf" id="6_display"]
+[ext_resource type="PackedScene" path="res://ui/menu_button.tscn" id="7_menu_button"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_atmosphere"]
+shader = ExtResource("2_atmosphere")
+shader_parameter/ink = Color(0.035, 0.043, 0.062, 1)
+shader_parameter/warm_glow = Color(0.42, 0.3, 0.16, 1)
+shader_parameter/glow_center = Vector2(0.3, 0.42)
+shader_parameter/right_strength = 0.72
+shader_parameter/vignette_strength = 0.52
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_grain"]
+shader = ExtResource("4_grain")
+shader_parameter/amount = 0.026
+shader_parameter/steps_per_second = 24.0
+
+[sub_resource type="Gradient" id="Gradient_scrim"]
+offsets = PackedFloat32Array(0, 0.4, 0.72, 1)
+colors = PackedColorArray(0.024, 0.031, 0.047, 0, 0.024, 0.031, 0.047, 0.42, 0.024, 0.031, 0.047, 0.8, 0.02, 0.027, 0.042, 0.95)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_scrim"]
+gradient = SubResource("Gradient_scrim")
+width = 512
+height = 512
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_toast"]
+content_margin_left = 16.0
+content_margin_top = 9.0
+content_margin_right = 16.0
+content_margin_bottom = 10.0
+bg_color = Color(0.045, 0.06, 0.085, 0.94)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.631373, 0.172549, 0.172549, 0.35)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+shadow_color = Color(0, 0, 0, 0.35)
+shadow_size = 8
+shadow_offset = Vector2(0, 4)
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_dialog"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.05, 0.065, 0.09, 0.97)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.631373, 0.172549, 0.172549, 0.3)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+shadow_color = Color(0, 0, 0, 0.55)
+shadow_size = 26
+shadow_offset = Vector2(0, 12)
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_stay_normal"]
+content_margin_left = 18.0
+content_margin_top = 8.0
+content_margin_right = 18.0
+content_margin_bottom = 8.0
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.91, 0.886, 0.83, 0.25)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_stay_pressed"]
+content_margin_left = 18.0
+content_margin_top = 8.0
+content_margin_right = 18.0
+content_margin_bottom = 8.0
+bg_color = Color(0.91, 0.886, 0.83, 0.09)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.91, 0.886, 0.83, 0.5)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_stay_hover"]
+content_margin_left = 18.0
+content_margin_top = 8.0
+content_margin_right = 18.0
+content_margin_bottom = 8.0
+bg_color = Color(0.91, 0.886, 0.83, 0.05)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.91, 0.886, 0.83, 0.4)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_btn_focus"]
+content_margin_left = 18.0
+content_margin_top = 8.0
+content_margin_right = 18.0
+content_margin_bottom = 8.0
+bg_color = Color(0, 0, 0, 0)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.717647, 0.243137, 0.243137, 0.9)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+expand_margin_left = 2.0
+expand_margin_top = 2.0
+expand_margin_right = 2.0
+expand_margin_bottom = 2.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_leave_normal"]
+content_margin_left = 18.0
+content_margin_top = 8.0
+content_margin_right = 18.0
+content_margin_bottom = 8.0
+bg_color = Color(0.45, 0.1, 0.1, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.62, 0.16, 0.16, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_leave_pressed"]
+content_margin_left = 18.0
+content_margin_top = 8.0
+content_margin_right = 18.0
+content_margin_bottom = 8.0
+bg_color = Color(0.36, 0.08, 0.08, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.52, 0.13, 0.13, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="StyleBox_leave_hover"]
+content_margin_left = 18.0
+content_margin_top = 8.0
+content_margin_right = 18.0
+content_margin_bottom = 8.0
+bg_color = Color(0.56, 0.13, 0.13, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.62, 0.16, 0.16, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[node name="MainMenuUI" type="Control" unique_id=1502791522]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Atmosphere" type="ColorRect" parent="." unique_id=1734940156]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_atmosphere")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Grain" type="ColorRect" parent="." unique_id=1389803063]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_grain")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Scrim" type="TextureRect" parent="." unique_id=1792172825]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = SubResource("GradientTexture2D_scrim")
+
+[node name="MenuRoot" type="Control" parent="." unique_id=311946929]
+unique_name_in_owner = true
+anchors_preset = 0
+offset_left = 760.0
+offset_top = 120.0
+offset_right = 1180.0
+offset_bottom = 620.0
+mouse_filter = 2
+
+[node name="Stack" type="VBoxContainer" parent="MenuRoot" unique_id=1634785687]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Title" type="Label" parent="MenuRoot/Stack" unique_id=2124799700]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.91, 0.886, 0.83, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.55)
+theme_override_constants/shadow_offset_x = 0
+theme_override_constants/shadow_offset_y = 3
+theme_override_fonts/font = ExtResource("4_bycpm")
+theme_override_font_sizes/font_size = 300
+text = "HOMEBOUND"
+
+[node name="RuleGap" type="Control" parent="MenuRoot/Stack" unique_id=1354789016]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="TitleRule" type="ColorRect" parent="MenuRoot/Stack" unique_id=1564852866]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(44, 2)
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 2
+color = Color(0.631373, 0.172549, 0.172549, 0.85)
+
+[node name="MenuGap" type="Control" parent="MenuRoot/Stack" unique_id=1552288774]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Menu" type="VBoxContainer" parent="MenuRoot/Stack" unique_id=90365068]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="NewGame" parent="MenuRoot/Stack/Menu" unique_id=1074286157 instance=ExtResource("7_menu_button")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="LoadGame" parent="MenuRoot/Stack/Menu" unique_id=1108159812 instance=ExtResource("7_menu_button")]
+unique_name_in_owner = true
+layout_mode = 2
+label_text = "CONTINUE"
+
+[node name="Settings" parent="MenuRoot/Stack/Menu" unique_id=1466366950 instance=ExtResource("7_menu_button")]
+unique_name_in_owner = true
+layout_mode = 2
+label_text = "SETTINGS"
+
+[node name="Quit" parent="MenuRoot/Stack/Menu" unique_id=246479136 instance=ExtResource("7_menu_button")]
+unique_name_in_owner = true
+layout_mode = 2
+label_text = "QUIT"
+
+[node name="Toast" type="PanelContainer" parent="." unique_id=859312718]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_left = 60.0
+offset_top = 540.0
+offset_right = 340.0
+offset_bottom = 590.0
+theme_override_styles/panel = SubResource("StyleBox_toast")
+
+[node name="ToastLabel" type="Label" parent="Toast" unique_id=736744291]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.956863, 0.929412, 0.878431, 0.95)
+theme_override_fonts/font = ExtResource("6_display")
+theme_override_font_sizes/font_size = 20
+text = "A new story is still being written."
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="QuitModal" type="Control" parent="." unique_id=216585851]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Dim" type="ColorRect" parent="QuitModal" unique_id=422918290]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.012, 0.016, 0.028, 0.78)
+
+[node name="DialogCenter" type="CenterContainer" parent="QuitModal" unique_id=577354254]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Dialog" type="PanelContainer" parent="QuitModal/DialogCenter" unique_id=1645266844]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(400, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBox_dialog")
+
+[node name="DialogMargin" type="MarginContainer" parent="QuitModal/DialogCenter/Dialog" unique_id=1863336566]
+layout_mode = 2
+theme_override_constants/margin_left = 32
+theme_override_constants/margin_top = 30
+theme_override_constants/margin_right = 32
+theme_override_constants/margin_bottom = 28
+
+[node name="DialogStack" type="VBoxContainer" parent="QuitModal/DialogCenter/Dialog/DialogMargin" unique_id=234981816]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="DialogTitle" type="Label" parent="QuitModal/DialogCenter/Dialog/DialogMargin/DialogStack" unique_id=926571387]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.91, 0.886, 0.83, 1)
+theme_override_fonts/font = ExtResource("6_display")
+theme_override_font_sizes/font_size = 34
+text = "LEAVE THIS STORY?"
+
+[node name="DialogRuleGap" type="Control" parent="QuitModal/DialogCenter/Dialog/DialogMargin/DialogStack" unique_id=228588472]
+custom_minimum_size = Vector2(0, 14)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="DialogRule" type="ColorRect" parent="QuitModal/DialogCenter/Dialog/DialogMargin/DialogStack" unique_id=1193993167]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.631373, 0.172549, 0.172549, 0.25)
+
+[node name="DialogBodyGap" type="Control" parent="QuitModal/DialogCenter/Dialog/DialogMargin/DialogStack" unique_id=1571786164]
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="DialogBody" type="Label" parent="QuitModal/DialogCenter/Dialog/DialogMargin/DialogStack" unique_id=1303412521]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.91, 0.886, 0.83, 0.55)
+theme_override_fonts/font = ExtResource("6_display")
+theme_override_font_sizes/font_size = 14
+text = "Your place in the story will be kept for later."
+autowrap_mode = 3
+
+[node name="DialogButtonsGap" type="Control" parent="QuitModal/DialogCenter/Dialog/DialogMargin/DialogStack" unique_id=1380795596]
+custom_minimum_size = Vector2(0, 26)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="DialogButtons" type="HBoxContainer" parent="QuitModal/DialogCenter/Dialog/DialogMargin/DialogStack" unique_id=1990658890]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 2
+
+[node name="StayButton" type="Button" parent="QuitModal/DialogCenter/Dialog/DialogMargin/DialogStack/DialogButtons" unique_id=1252842647]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(118, 42)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.91, 0.886, 0.83, 1)
+theme_override_colors/font_focus_color = Color(0.956863, 0.929412, 0.878431, 1)
+theme_override_colors/font_pressed_color = Color(0.91, 0.886, 0.83, 1)
+theme_override_colors/font_hover_color = Color(0.956863, 0.929412, 0.878431, 1)
+theme_override_fonts/font = ExtResource("6_display")
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBox_stay_normal")
+theme_override_styles/pressed = SubResource("StyleBox_stay_pressed")
+theme_override_styles/hover = SubResource("StyleBox_stay_hover")
+theme_override_styles/focus = SubResource("StyleBox_btn_focus")
+text = "STAY"
+
+[node name="LeaveButton" type="Button" parent="QuitModal/DialogCenter/Dialog/DialogMargin/DialogStack/DialogButtons" unique_id=1725505951]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(118, 42)
+layout_mode = 2
+mouse_default_cursor_shape = 2
+theme_override_colors/font_color = Color(0.956863, 0.929412, 0.878431, 1)
+theme_override_colors/font_focus_color = Color(0.988235, 0.964706, 0.917647, 1)
+theme_override_colors/font_pressed_color = Color(0.901961, 0.85098, 0.788235, 1)
+theme_override_colors/font_hover_color = Color(0.988235, 0.964706, 0.917647, 1)
+theme_override_fonts/font = ExtResource("6_display")
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBox_leave_normal")
+theme_override_styles/pressed = SubResource("StyleBox_leave_pressed")
+theme_override_styles/hover = SubResource("StyleBox_leave_hover")
+theme_override_styles/focus = SubResource("StyleBox_btn_focus")
+text = "QUIT"

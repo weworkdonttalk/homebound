@@ -1,0 +1,103 @@
+[gd_scene format=3 uid="uid://dwwkuo0nx8ldu"]
+
+[ext_resource type="Script" uid="uid://d060x0vwx1swg" path="res://setting.gd" id="1_script"]
+[ext_resource type="FontFile" uid="uid://bl2n0bgsd3v3a" path="res://fonts/AmaticSC-Bold.ttf" id="2_title"]
+[ext_resource type="PackedScene" path="res://ui/menu_button.tscn" id="4_menu_button"]
+
+[sub_resource type="StyleBoxFlat" id="Slider_panel"]
+content_margin_left = 12.0
+content_margin_top = 5.0
+content_margin_right = 12.0
+content_margin_bottom = 5.0
+bg_color = Color(0.035, 0.04, 0.047, 0.84)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.631373, 0.172549, 0.172549, 0.55)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="Slider_track"]
+content_margin_top = 3.0
+content_margin_bottom = 3.0
+bg_color = Color(0.34, 0.35, 0.36, 1)
+corner_radius_top_left = 2
+corner_radius_top_right = 2
+corner_radius_bottom_right = 2
+corner_radius_bottom_left = 2
+
+[sub_resource type="StyleBoxFlat" id="Slider_fill"]
+content_margin_top = 3.0
+content_margin_bottom = 3.0
+bg_color = Color(0.9, 0.9, 0.88, 1)
+
+[node name="setting" type="Control" unique_id=1817845557]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1508734050]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.105, 0.12, 0.15, 1)
+
+[node name="Title" type="Label" parent="." unique_id=1059282880]
+layout_mode = 0
+theme_override_colors/font_color = Color(0.91, 0.886, 0.83, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.55)
+theme_override_constants/shadow_offset_y = 3
+theme_override_fonts/font = ExtResource("2_title")
+theme_override_font_sizes/font_size = 92
+text = "SETTING"
+
+[node name="TitleRule" type="ColorRect" parent="." unique_id=1589406961]
+layout_mode = 0
+mouse_filter = 2
+color = Color(0.631373, 0.172549, 0.172549, 0.85)
+
+[node name="ButtonList" type="VBoxContainer" parent="." unique_id=1504444243]
+layout_mode = 0
+theme_override_constants/separation = 10
+
+[node name="Controls" parent="ButtonList" unique_id=250358684 instance=ExtResource("4_menu_button")]
+layout_mode = 2
+label_text = "CONTROLS"
+press_effect_enabled = false
+
+[node name="Brightness" parent="ButtonList" unique_id=1425830162 instance=ExtResource("4_menu_button")]
+layout_mode = 2
+label_text = "BRIGHNESS"
+press_effect_enabled = false
+
+[node name="Credits" parent="ButtonList" unique_id=1143176953 instance=ExtResource("4_menu_button")]
+layout_mode = 2
+label_text = "CREDITS"
+press_effect_enabled = false
+
+[node name="BrightnessPanel" type="Panel" parent="." unique_id=359987165]
+visible = false
+layout_mode = 0
+theme_override_styles/panel = SubResource("Slider_panel")
+
+[node name="BrightnessSlider" type="HSlider" parent="BrightnessPanel" unique_id=1910298515]
+layout_mode = 0
+focus_mode = 0
+mouse_default_cursor_shape = 2
+theme_override_styles/slider = SubResource("Slider_track")
+theme_override_styles/grabber_area = SubResource("Slider_fill")
+theme_override_styles/grabber_area_highlight = SubResource("Slider_fill")
+max_value = 1.0
+step = 0.01
+value = 0.55

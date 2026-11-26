@@ -1,0 +1,113 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://pause_menu.gd" id="1_script"]
+[ext_resource type="Shader" path="res://pause_blur.gdshader" id="2_blur"]
+[ext_resource type="FontFile" uid="uid://bl2n0bgsd3v3a" path="res://fonts/AmaticSC-Bold.ttf" id="3_title"]
+[ext_resource type="FontFile" uid="uid://c3kq8wv1m0r5d" path="res://fonts/SpecialElite-Regular.ttf" id="4_display"]
+[ext_resource type="PackedScene" path="res://ui/menu_button.tscn" id="5_button"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_pause_blur"]
+shader = ExtResource("2_blur")
+
+[node name="PauseMenu" type="CanvasLayer"]
+layer = 50
+process_mode = 3
+script = ExtResource("1_script")
+
+[node name="BackBufferCopy" type="BackBufferCopy" parent="."]
+copy_mode = 2
+
+[node name="UI" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Blur" type="ColorRect" parent="UI"]
+material = SubResource("ShaderMaterial_pause_blur")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="MenuRoot" type="Control" parent="UI"]
+layout_mode = 0
+mouse_filter = 2
+
+[node name="Stack" type="VBoxContainer" parent="UI/MenuRoot"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="UI/MenuRoot/Stack"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.91, 0.886, 0.83, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.55)
+theme_override_constants/shadow_offset_y = 3
+theme_override_fonts/font = ExtResource("3_title")
+theme_override_font_sizes/font_size = 92
+text = "PAUSED"
+horizontal_alignment = 1
+
+[node name="RuleGap" type="Control" parent="UI/MenuRoot/Stack"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="TitleRule" type="ColorRect" parent="UI/MenuRoot/Stack"]
+custom_minimum_size = Vector2(52, 2)
+layout_mode = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+color = Color(0.631373, 0.172549, 0.172549, 0.9)
+
+[node name="MenuGap" type="Control" parent="UI/MenuRoot/Stack"]
+custom_minimum_size = Vector2(0, 24)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Menu" type="VBoxContainer" parent="UI/MenuRoot/Stack"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Continue" parent="UI/MenuRoot/Stack/Menu" instance=ExtResource("5_button")]
+layout_mode = 2
+label_text = "CONTINUE"
+press_effect_enabled = false
+centered_label = true
+
+[node name="Settings" parent="UI/MenuRoot/Stack/Menu" instance=ExtResource("5_button")]
+layout_mode = 2
+label_text = "SETTINGS"
+press_effect_enabled = false
+centered_label = true
+
+[node name="ExitToMenu" parent="UI/MenuRoot/Stack/Menu" instance=ExtResource("5_button")]
+layout_mode = 2
+label_text = "EXIT TO MENU"
+press_effect_enabled = false
+centered_label = true
+
+[node name="HintGap" type="Control" parent="UI/MenuRoot/Stack"]
+custom_minimum_size = Vector2(0, 18)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Hint" type="Label" parent="UI/MenuRoot/Stack"]
+custom_minimum_size = Vector2(0, 28)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.91, 0.886, 0.83, 0.55)
+theme_override_fonts/font = ExtResource("4_display")
+theme_override_font_sizes/font_size = 16
+text = "ESC  /  CONTINUE"
+horizontal_alignment = 1

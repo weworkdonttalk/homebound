@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://dik3c7u1y8825"]
+
+[ext_resource type="PackedScene" uid="uid://dmi0vksl7vu3v" path="res://source/letter.blend" id="1_juthb"]
+[ext_resource type="Texture2D" uid="uid://b42vptv43xmxd" path="res://textures/main_baseColor.jpeg" id="2_bxabw"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hnptl"]
+albedo_texture = ExtResource("2_bxabw")
+
+[node name="letter2" unique_id=1469254005 instance=ExtResource("1_juthb")]
+
+[node name="letter" parent="." index="0" unique_id=1029449962]
+material_override = SubResource("StandardMaterial3D_hnptl")

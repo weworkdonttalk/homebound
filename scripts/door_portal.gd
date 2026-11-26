@@ -229,8 +229,7 @@ func _setup_fade_overlay() -> void:
 
 	if fade_rect:
 		fade_rect.anchors_preset = Control.PRESET_FULL_RECT
-		# Warna silau putih-keemasan (blinding warm white)
-		fade_rect.color = Color(1.0, 0.98, 0.90, 1.0)
+		# Biarkan warna tetap hitam di awal scene; warna putih silau diatur saat cutscene portal dimulai.
 		fade_rect.modulate.a = 0.0
 
 func _get_door_world_pos() -> Vector3:

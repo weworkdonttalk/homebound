@@ -42,11 +42,13 @@ func _ready() -> void:
 	remove_ceiling()
 	_sanitize_item_materials(self)
 
-	# Smooth fade-in transisi dari blinding light Chapter 1
+	# Smooth fade-in hitam saat mulai game (atau putih hanya jika baru masuk dari portal ke Chapter 2)
 	var fade_layer = get_node_or_null("FadeCanvasLayer")
 	if fade_layer:
 		var rect = fade_layer.get_node_or_null("ColorRect") as ColorRect
 		if rect:
+			if "chapter_2" not in scene_file_path.to_lower():
+				rect.color = Color(0.0, 0.0, 0.0, 1.0)
 			rect.modulate.a = 1.0
 			var tw = create_tween()
 			tw.tween_property(rect, "modulate:a", 0.0, 0.8)\
