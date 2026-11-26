@@ -97,9 +97,14 @@ func _ready() -> void:
 		pressure_plate.plate_activated.connect(_on_plate_activated)
 		pressure_plate.plate_deactivated.connect(_on_plate_deactivated)
 
-	# Wiring sinyal Glowing Platforms
-	if glowing_platforms:
+	# Wiring sinyal Glowing Platforms (opsional / legacy jika masih ada)
+	if glowing_platforms and glowing_platforms.has_signal("all_platforms_activated"):
 		glowing_platforms.all_platforms_activated.connect(_on_all_platforms_activated)
+
+	# Wiring sinyal VoidRespawnZone / Parkour batu baru
+	var void_zone := get_node_or_null("../VoidRespawnZone")
+	if void_zone and void_zone.has_signal("parkour_completed"):
+		void_zone.connect("parkour_completed", _on_all_platforms_activated)
 
 	# Wiring sinyal Door Portal
 	if door_portal:
@@ -172,47 +177,39 @@ func _run_cinematic_sequence() -> void:
 	if player and player.has_method("set_input_enabled"):
 		player.call("set_input_enabled", false)
 
-	# 2. Kamera pan ke pintu akses perantara
-	if game_camera and access_door:
+	# 2. Kamera pan menuju gerbang tembok belah / awal parkour batu
+	var parkour_start := get_node_or_null("../ParkourRocks/Rock_01_Anchor") as Node3D
+	if parkour_start == null:
+		parkour_start = access_door
+	if game_camera and parkour_start:
 		if game_camera.has_method("pan_to_target"):
-			var tw = game_camera.call("pan_to_target", access_door, 1.4)
+			var tw = game_camera.call("pan_to_target", parkour_start, 1.3)
 			if tw and tw is Tween:
 				await tw.finished
-		await get_tree().create_timer(0.2).timeout
+		await get_tree().create_timer(0.25).timeout
 
-	# Buka pintu perantara
-	_open_access_door()
-	await get_tree().create_timer(1.0).timeout
-
-	# 3. Pemicu kemunculan platform parkour bertahap satu per satu
-	if parkour_sequencer and parkour_sequencer.has_method("trigger_popup_sequence"):
-		parkour_sequencer.call("trigger_popup_sequence")
-
-	# Kamera bergeser menyoroti platform yang sedang naik
-	var mid_target: Node3D = null
-	if parkour_sequencer and parkour_sequencer.get("platforms") and parkour_sequencer.platforms.size() > 1:
-		mid_target = parkour_sequencer.platforms[1]
-	if mid_target == null:
-		mid_target = get_node_or_null("../interact/Sketchfab_Scene2")
-
+	# 3. Aktifkan DoorPortal dan soroti batu puncak di depan pintu keluar
+	var mid_target: Node3D = get_node_or_null("../ParkourRocks/Rock_06_Anchor") as Node3D
 	if game_camera and mid_target:
 		if game_camera.has_method("pan_to_target"):
-			var tw2 = game_camera.call("pan_to_target", mid_target, 1.8)
+			var tw2 = game_camera.call("pan_to_target", mid_target, 1.3)
 			if tw2 and tw2 is Tween:
 				await tw2.finished
-		await get_tree().create_timer(0.5).timeout
+		await get_tree().create_timer(0.25).timeout
 
-	# 4. Kamera menyoroti pintu keluar akhir di atas batu
+	# 4. Kamera menyoroti pintu keluar akhir di atas batu puncak
 	if game_camera and exit_door:
 		if game_camera.has_method("pan_to_target"):
-			var tw3 = game_camera.call("pan_to_target", exit_door, 1.4)
+			var tw3 = game_camera.call("pan_to_target", exit_door, 1.3)
 			if tw3 and tw3 is Tween:
 				await tw3.finished
 		await get_tree().create_timer(0.2).timeout
 
-	# Pintu keluar terbuka dan memancarkan cahaya putih terang menyilaukan
+	# Aktifkan portal & buka pintu keluar
+	if door_portal and door_portal.has_method("activate_portal"):
+		door_portal.call("activate_portal")
 	_open_exit_door()
-	await get_tree().create_timer(1.2).timeout
+	await get_tree().create_timer(1.0).timeout
 
 	# 5. Kamera kembali dengan mulus ke posisi karakter pemain
 	if game_camera and game_camera.has_method("return_to_player"):

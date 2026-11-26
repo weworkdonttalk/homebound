@@ -18,7 +18,6 @@
 [ext_resource type="PackedScene" uid="uid://dvyqetk67p8gm" path="res://assets/environment/props/furniture/shelf.glb" id="14_x0bwc"]
 [ext_resource type="PackedScene" uid="uid://bducpi8ga047c" path="res://assets/environment/props/interactables/granite_pressure_plate.glb" id="15_bp6hc"]
 [ext_resource type="PackedScene" uid="uid://dhdrcr11u2uhx" path="res://assets/environment/props/furniture/wizard_table.glb" id="16_24728"]
-[ext_resource type="PackedScene" uid="uid://dpv3kem0gwpmo" path="res://assets/environment/props/interactables/lever.glb" id="18_mysla"]
 [ext_resource type="PackedScene" uid="uid://c52on5dvr32k7" path="res://assets/environment/props/interactables/platform_rock.glb" id="19_7e5uw"]
 [ext_resource type="PackedScene" uid="uid://kgriwra7wttd" path="res://assets/characters/mc/char_no_light.fbx" id="20_1kpqx"]
 [ext_resource type="AnimationLibrary" uid="uid://cg3dekn1wc1pr" path="res://animations/mc/clips/idle (2).fbx" id="21_almrc"]
@@ -26,15 +25,18 @@
 [ext_resource type="Script" uid="uid://e6wgrj1fq0hu" path="res://scripts/characters/headlamp_attachment.gd" id="23_4l0ox"]
 [ext_resource type="Script" uid="uid://siotgpfwdaq5" path="res://scripts/tembok_kebelah.gd" id="24_5cv3f"]
 [ext_resource type="Script" uid="uid://x72y4d5hdcyg" path="res://scripts/abcd_puzzle_manager.gd" id="26_ria18"]
-[ext_resource type="Script" uid="uid://beajy3lv18r8k" path="res://scripts/gameplay/floating_object.gd" id="26_swyki"]
 [ext_resource type="Script" uid="uid://cyam151wac6ha" path="res://scripts/puzzle_slot.gd" id="27_h6dfy"]
 [ext_resource type="PackedScene" uid="uid://bf7pnjr4032po" path="res://assets/environment/chapter_1/persian_malayer_carpet.glb" id="31_hfxiw"]
 [ext_resource type="Script" uid="uid://ly0oqvm1cbdu" path="res://scripts/door_portal.gd" id="38_u87qk"]
-[ext_resource type="Script" uid="uid://bkxk3ahwovtss" path="res://scripts/step_stair_revealer.gd" id="39_ria18"]
 [ext_resource type="PackedScene" uid="uid://c07owbwygw67b" path="res://assets/wooden_door.glb" id="39_y1o37"]
+[ext_resource type="Shader" uid="uid://cu46ba50sudoc" path="res://shaders/horror_post_process.gdshader" id="40_dkkwl"]
 [ext_resource type="Script" uid="uid://c2aji0ua6215s" path="res://scripts/gameplay/parkour_sequencer.gd" id="44_5cv3f"]
+[ext_resource type="Material" path="res://assets/textures/dark_wood/dark_wood_floor.tres" id="44_dkkwl"]
+[ext_resource type="Script" uid="uid://bo5w71akh4aqj" path="res://scripts/gameplay/void_respawn_zone.gd" id="46_h6dfy"]
 [ext_resource type="Script" uid="uid://b5dv4bcb4g5s6" path="res://scripts/cutscene_tembok_kebelah.gd" id="46_hfxiw"]
 [ext_resource type="Script" uid="uid://cywgalwfcylf2" path="res://scripts/gameplay/lamp_proximity_fader.gd" id="47_ria18"]
+[ext_resource type="Script" uid="uid://cefq03gxfdep0" path="res://scripts/gameplay/parkour_rock.gd" id="48_dkkwl"]
+[ext_resource type="Script" uid="uid://c1wt2eu5lssfx" path="res://scripts/effects/dust_particles.gd" id="49_5ywug"]
 [ext_resource type="Script" uid="uid://bk7b3iyruw8qm" path="res://scripts/camera/cinematic_camera_rig.gd" id="ext_cam"]
 [ext_resource type="Script" uid="uid://bi6c48apci1x3" path="res://scripts/gameplay/carry_system.gd" id="ext_carry"]
 [ext_resource type="Script" uid="uid://cmtuv7nhn74uv" path="res://scripts/characters/mc.gd" id="ext_mc"]
@@ -67,9 +69,6 @@ scale_max = 0.3
 [sub_resource type="BoxMesh" id="BoxMesh_ry84g"]
 size = Vector3(0.08, 0.08, 0.08)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_rock"]
-size = Vector3(1.38, 1.1559374, 1.08708)
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_j0stj"]
 size = Vector3(170.64818, 0.5634079, 33.257324)
 
@@ -78,12 +77,6 @@ size = Vector3(170.65, 20, 2)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_boundary_x"]
 size = Vector3(2, 20, 33.26)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_wooden_duck"]
-size = Vector3(562.4, 570.8, 184.6)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_yxtl1"]
-size = Vector3(0.5399023, 0.4903125, 0.64170897)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_grqky"]
 size = Vector3(1.8459473, 0.98583984, 1.0112305)
@@ -145,9 +138,6 @@ size = Vector3(2.7153249, 1.7755203, 2.7106266)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ry84g"]
 size = Vector3(2.3869593, 0.30133438, 4.453458)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_rgfg7"]
-size = Vector3(0.6201025, 0.49989745, 0.7172705)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_4l0ox"]
 size = Vector3(0.7577, 0.6688, 0.9364)
@@ -215,41 +205,37 @@ albedo_color = Color(0.2, 0.85, 1, 0.28)
 [sub_resource type="BoxMesh" id="BoxMesh_tw85o"]
 size = Vector3(0.76, 0.67, 0.94)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_toy_car"]
-size = Vector3(0.8386426, 0.65, 0.77671874)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_htemk"]
-size = Vector3(0.16455078, 0.14642334, 0.12258911)
-
 [sub_resource type="Environment" id="Environment_dark"]
 background_mode = 1
 background_color = Color(0.01, 0.01, 0.015, 1)
 ambient_light_source = 2
-ambient_light_color = Color(0.53021884, 0.4420622, 0.39174113, 1)
+ambient_light_color = Color(0.32, 0.34, 0.4, 1)
+ambient_light_energy = 0.74
 tonemap_mode = 3
-tonemap_exposure = 1.15
+tonemap_exposure = 1.08
 ssr_enabled = true
 ssao_enabled = true
 ssao_radius = 3.2
 ssao_intensity = 3.0
 glow_enabled = true
-glow_intensity = 0.35
-glow_strength = 0.3
-glow_bloom = 0.1
+glow_intensity = 0.45
+glow_strength = 0.45
+glow_bloom = 0.08
 fog_enabled = true
 fog_mode = 1
-fog_light_color = Color(0.0470588, 0.0666667, 0.0784314, 1)
-fog_density = 0.025
-fog_depth_begin = 15.0
-fog_depth_end = 60.0
-volumetric_fog_density = 0.015
-volumetric_fog_albedo = Color(0.15, 0.2, 0.28, 1)
-volumetric_fog_emission = Color(0.003, 0.005, 0.008, 1)
-volumetric_fog_anisotropy = 0.6
-volumetric_fog_length = 25.0
+fog_light_color = Color(0.05, 0.065, 0.085, 1)
+fog_density = 0.007
+fog_depth_begin = 18.0
+fog_depth_end = 65.0
+volumetric_fog_enabled = true
+volumetric_fog_density = 0.0045
+volumetric_fog_albedo = Color(0.75, 0.78, 0.84, 1)
+volumetric_fog_anisotropy = 0.68
+volumetric_fog_length = 30.0
 adjustment_enabled = true
-adjustment_contrast = 1.12
-adjustment_saturation = 1.05
+adjustment_brightness = 1.18
+adjustment_contrast = 0.96
+adjustment_saturation = 0.72
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.65
@@ -261,22 +247,14 @@ radius = 0.55
 [sub_resource type="BoxShape3D" id="BoxShape3D_plate"]
 size = Vector3(1.8, 0.4, 1.8)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_platform"]
-resource_local_to_scene = true
-albedo_color = Color(0.2, 0.35, 0.5, 1)
-emission_enabled = true
-emission = Color(0.25, 0.85, 1, 1)
-emission_energy_multiplier = 0.0
-
-[sub_resource type="BoxMesh" id="BoxMesh_platform"]
-material = SubResource("StandardMaterial3D_platform")
-size = Vector3(2.5, 0.4, 2)
-
-[sub_resource type="BoxShape3D" id="BoxShape3D_platform"]
-size = Vector3(2.5, 0.4, 2)
-
 [sub_resource type="BoxShape3D" id="BoxShape3D_tw85o"]
 size = Vector3(3.0114503, 3, 2.8)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ry84g"]
+shader = ExtResource("40_dkkwl")
+shader_parameter/grain_amount = 0.042
+shader_parameter/mood_forgotten = 0.0
+shader_parameter/steps_per_second = 24.0
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_vignette"]
 shader = ExtResource("ext_vignette")
@@ -287,9 +265,12 @@ shader_parameter/vignette_color = Color(0, 0, 0, 1)
 shader_parameter/vignette_opacity = 0.96
 shader_parameter/aspect_correction = 0.7
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_u87qk"]
+size = Vector3(56, 28, 38)
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_blocker"]
 shading_mode = 0
-albedo_color = Color(0.015, 0.02, 0.025, 1)
+albedo_color = Color(0.008, 0.01, 0.014, 1)
 
 [sub_resource type="BoxMesh" id="BoxMesh_ceiling_blocker"]
 material = SubResource("StandardMaterial3D_blocker")
@@ -299,18 +280,46 @@ size = Vector3(210, 4, 60)
 material = SubResource("StandardMaterial3D_blocker")
 size = Vector3(4, 30, 60)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ria18"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_q0ejf"]
 shading_mode = 0
-albedo_color = Color(0.22, 0.15, 0.11, 1)
+albedo_color = Color(0.004, 0.006, 0.01, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_ll0or"]
+material = SubResource("StandardMaterial3D_q0ejf")
+size = Vector3(70, 0.5, 42)
 
 [sub_resource type="BoxMesh" id="BoxMesh_h6dfy"]
-size = Vector3(171.6, 0.2, 34.5)
+size = Vector3(107, 0.2, 34.5)
 subdivide_width = 32
 subdivide_height = 1
 subdivide_depth = 32
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_5ywug"]
-size = Vector3(171.6, 0.2, 34.5)
+size = Vector3(107, 0.2, 34.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_k0nbe"]
+size = Vector3(68, 3, 42)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_y1o37"]
+size = Vector3(1.18, 0.8, 1.036)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_q0ejf"]
+size = Vector3(1.177, 0.8, 1.038)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ll0or"]
+size = Vector3(1.178, 0.8, 1.037)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_kwwm2"]
+size = Vector3(1.178, 0.8, 1.037)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_vulqq"]
+size = Vector3(1.177, 0.8, 1.038)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ul2ba"]
+size = Vector3(1.18, 0.8, 1.036)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_xkoul"]
+size = Vector3(1.182, 0.767, 1.035)
 
 [node name="main" type="Node3D" unique_id=1684493147]
 script = ExtResource("ext_world")
@@ -389,18 +398,6 @@ material_override = ExtResource("ext_wall")
 [node name="Plane_004_jn1_0_003" parent="chapter 1 kosong/Sketchfab_model_041/55ae363a0b4e4e038cd27bd321746a6a_fbx_004/RootNode_030/Plane_009" parent_id_path=PackedInt32Array(467153391, 720248871) index="0" unique_id=868948142]
 material_override = ExtResource("ext_wall")
 
-[node name="Sketchfab_Scene" parent="chapter 1 kosong" unique_id=674303634 instance=ExtResource("31_hfxiw")]
-transform = Transform3D(119.89529, 9.086126e-12, 1.0538788e-10, -8.3238716e-10, 1.0000006, 0, 3.117483e-11, -2.9802322e-08, 135.07132, 4.7799845, -1.0365939, 0.5847354)
-
-[node name="Sketchfab_Scene16" parent="chapter 1 kosong" unique_id=459379873 instance=ExtResource("19_7e5uw")]
-transform = Transform3D(4, 0, 0, 0, 2.4996293, 3.1227958, 0, -3.1227958, 2.4996293, 26.062344, 3.6006289, 12.381359)
-
-[node name="StaticBody3D" type="StaticBody3D" parent="chapter 1 kosong/Sketchfab_Scene16" unique_id=690937217]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="chapter 1 kosong/Sketchfab_Scene16/StaticBody3D" unique_id=1785532817]
-transform = Transform3D(1, 0, 0, 0, -0.7214367, -0.69248044, 0, 0.69248044, -0.7214367, -0.1329999, -0.09860176, 0.15756488)
-shape = SubResource("BoxShape3D_rock")
-
 [node name="StaticBody3D" type="StaticBody3D" parent="chapter 1 kosong" unique_id=100464242]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="chapter 1 kosong/StaticBody3D" unique_id=576052671]
@@ -429,27 +426,10 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 21.56, 9.44, -4.68)
 shape = ExtResource("6_hemp5")
 disabled = true
 
+[node name="CenterCarpet" parent="chapter 1 kosong" unique_id=674303634 instance=ExtResource("31_hfxiw")]
+transform = Transform3D(14, 0, 0, 0, 1, 0, 0, 0, 13, -34, -0.99, 1.8)
+
 [node name="forgotten" type="Node3D" parent="." unique_id=984026037]
-
-[node name="Sketchfab_Scene19" parent="forgotten" unique_id=1673699016 instance=ExtResource("2_ia0au")]
-transform = Transform3D(0.0099013625, -0.0011968409, 0.0007284175, 0, 0.005198978, 0.008542284, -0.0014010782, -0.008458026, 0.0051476965, 37.65554, 5.30935, -4.7110553)
-visible = false
-
-[node name="StaticBody3D" type="StaticBody3D" parent="forgotten/Sketchfab_Scene19" unique_id=223552803]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="forgotten/Sketchfab_Scene19/StaticBody3D" unique_id=33634842]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -202.04, 223.76, 0)
-shape = SubResource("BoxShape3D_wooden_duck")
-disabled = true
-
-[node name="Sketchfab_Scene17" parent="forgotten" unique_id=886227937 instance=ExtResource("3_1kpqx")]
-transform = Transform3D(1.7438054, 1.7914081, -1.4901161e-08, -1.6567461, 1.6127222, 0.95095766, 0.6814213, -0.66331404, 2.3120725, 29.278156, 6.2726674, -4.543419)
-
-[node name="StaticBody3D" type="StaticBody3D" parent="forgotten/Sketchfab_Scene17" unique_id=871376772]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="forgotten/Sketchfab_Scene17/StaticBody3D" unique_id=1653270748]
-transform = Transform3D(0.9999999, 8.2701445e-07, 0, -7.450581e-09, 1.0000004, 0, -2.682209e-07, 1.6391277e-07, 1, 0.01716137, 0.2451582, -0.004937172)
-shape = SubResource("BoxShape3D_yxtl1")
 
 [node name="remembered" type="Node3D" parent="." unique_id=1186491258]
 
@@ -610,22 +590,6 @@ shape = SubResource("BoxShape3D_ry84g")
 transform = Transform3D(1.0000191, 0, -3.2782555e-07, 0, 1, 0, 3.2782555e-07, 0, 1.0000191, -0.9407525, -0.27851963, -2.7388592)
 shape = SubResource("BoxShape3D_ry84g")
 
-[node name="Sketchfab_Scene18" parent="remembered" unique_id=959819222 instance=ExtResource("3_1kpqx")]
-transform = Transform3D(0.02917945, 2.4051642, 0.6814211, -1.9651647, -0.3991278, 1.4929252, 1.5450815, -0.5530669, 1.8859584, 35.456978, 5.2355833, 10.384674)
-visible = false
-
-[node name="StaticBody3D" type="StaticBody3D" parent="remembered/Sketchfab_Scene18" unique_id=1916356131]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="remembered/Sketchfab_Scene18/StaticBody3D" unique_id=2107017181]
-transform = Transform3D(1, 2.1457672e-06, -1.1920929e-07, 1.4901161e-08, 0.9999999, -2.9802322e-08, 5.9604645e-07, -3.0398369e-06, 1, -0.011727214, 0.21623325, -0.053474426)
-shape = SubResource("BoxShape3D_rgfg7")
-disabled = true
-
-[node name="Sketchfab_Scene21" parent="remembered" unique_id=795569822 instance=ExtResource("18_mysla")]
-transform = Transform3D(3.4610898, -0.14329207, 2.000081, -1.9053264, 1.0084989, 3.369371, -0.6249709, -3.868126, 0.8043718, 34.534622, 6.0962973, 2.906875)
-
-[node name="StaticBody3D" type="StaticBody3D" parent="remembered/Sketchfab_Scene21" unique_id=71248599]
-
 [node name="PushableToyBlock" type="RigidBody3D" parent="remembered" unique_id=264515352 groups=["carryable", "climbable", "pickup", "puzzle_block"]]
 transform = Transform3D(0.8476098, 0, 0.53062004, 0, 1, 0, -0.53062004, 0, 0.8476098, 20.6612, 2.7424579, 7.860197)
 collision_layer = 4
@@ -748,60 +712,6 @@ mesh = SubResource("BoxMesh_tw85o")
 
 [node name="interact" type="Node3D" parent="." unique_id=1452824985]
 
-[node name="Sketchfab_Scene22" parent="interact" unique_id=1870470566 instance=ExtResource("10_je2v8")]
-transform = Transform3D(4, 0, 0, 0, 2.101682, 3.4033709, 0, -3.4033709, 2.101682, 41.205246, 5.559646, 16.10382)
-visible = false
-script = ExtResource("26_swyki")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="interact/Sketchfab_Scene22" unique_id=1256451706]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="interact/Sketchfab_Scene22/StaticBody3D" unique_id=309793215]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.040678024, 0.33000016, -0.0016407967)
-shape = SubResource("BoxShape3D_toy_car")
-disabled = true
-
-[node name="Sketchfab_Scene" parent="interact" unique_id=1790706485 instance=ExtResource("9_sk1to")]
-transform = Transform3D(9.286154, 3.0141842, 2.163805, -3.710439, 7.543629, 5.415377, 2.3841858e-07, -5.831669, 8.123524, 46.1239, 8.038545, 11.448328)
-
-[node name="StaticBody3D" type="StaticBody3D" parent="interact/Sketchfab_Scene" unique_id=1514586078]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="interact/Sketchfab_Scene/StaticBody3D" unique_id=209461831]
-transform = Transform3D(0.9999989, -1.8993696e-07, -2.6762768e-07, 1.0495809e-06, 0.99999964, -2.3841858e-07, 6.497859e-07, 1.1920929e-07, 1, 0.00073575974, 0.082669854, 0.022626162)
-shape = SubResource("BoxShape3D_htemk")
-
-[node name="Sketchfab_Scene2" parent="interact" unique_id=1057301868 instance=ExtResource("19_7e5uw")]
-transform = Transform3D(5, 0, 0, 0, 3.0610502, 3.953476, 0, -3.953476, 3.0610502, 58.00248, 4.566818, -6.445199)
-visible = false
-script = ExtResource("26_swyki")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="interact/Sketchfab_Scene2" unique_id=391844007]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="interact/Sketchfab_Scene2/StaticBody3D" unique_id=177892679]
-transform = Transform3D(1, 0, 0, 0, 0.6287539, 0.780486, 0, -0.78495586, 0.6251735, -0.13300037, -0.24155694, 0.09772086)
-shape = SubResource("BoxShape3D_rock")
-disabled = true
-
-[node name="Sketchfab_Scene3" parent="interact" unique_id=1336347027 instance=ExtResource("19_7e5uw")]
-transform = Transform3D(5, 0, 0, 0, 3.057635, 3.9561176, 0, -3.9561176, 3.057635, 62.944942, 3.2202306, 13.971603)
-visible = false
-script = ExtResource("26_swyki")
-
-[node name="StaticBody3D" type="StaticBody3D" parent="interact/Sketchfab_Scene3" unique_id=1245248912]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="interact/Sketchfab_Scene3/StaticBody3D" unique_id=1371237955]
-transform = Transform3D(1, 0, 0, 0, 0.7959579, 0.605352, 0, -0.605352, 0.7959579, -0.133, -0.23340699, 0.057060696)
-shape = SubResource("BoxShape3D_rock")
-disabled = true
-
-[node name="Sketchfab_Scene4" parent="interact" unique_id=1095199743 instance=ExtResource("19_7e5uw")]
-transform = Transform3D(6, 0, 0, 0, 3.6691623, 4.747341, 0, -4.747341, 3.6691623, 73.65746, 8.709572, 4.6759415)
-
-[node name="StaticBody3D" type="StaticBody3D" parent="interact/Sketchfab_Scene4" unique_id=1842947739]
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="interact/Sketchfab_Scene4/StaticBody3D" unique_id=393435130]
-transform = Transform3D(1, 0, 0, 0, 0.7756547, 0.63115734, 0, -0.63115734, 0.7756547, -0.14342785, -0.26671678, 0.05397296)
-shape = SubResource("BoxShape3D_rock")
-
 [node name="char no light" parent="." unique_id=38472210 instance=ExtResource("20_1kpqx")]
 transform = Transform3D(2.2, 0, 0, 0, 2.2, 0, 0, 0, 2.2, -63.53547, 0.11266649, 9.63462)
 
@@ -908,16 +818,16 @@ script = ExtResource("23_4l0ox")
 [node name="HeadlampSpotLight" type="SpotLight3D" parent="char no light/Armature/Skeleton3D/HeadlampAttachment" unique_id=604972146]
 transform = Transform3D(-0.45454544, 1.3997852e-06, -2.814865e-06, 4.5384144e-07, 0.43195423, 0.14151719, 3.1107709e-06, 0.14151719, -0.43195423, 0, 0.14000022, 0.1941495)
 light_color = Color(0.9999996, 0.85029274, 0.6006287, 1)
-light_energy = 1.32
-light_volumetric_fog_energy = 2.5
+light_energy = 2.2
+light_volumetric_fog_energy = 2.8
 shadow_enabled = true
 shadow_bias = 0.1
 shadow_normal_bias = 2.0
 shadow_blur = 2.5
 distance_fade_enabled = true
-spot_range = 11.173
+spot_range = 14.0
 spot_attenuation = 0.07
-spot_angle = 42.65
+spot_angle = 42.0
 spot_angle_attenuation = 9.370114
 
 [node name="AnimationPlayer" parent="char no light" index="3" unique_id=390838825]
@@ -974,6 +884,13 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0.75)
 [node name="HoldPoint" type="Marker3D" parent="Player/body" unique_id=963220082]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.6, 0.75)
 
+[node name="PlayerRimLight" type="OmniLight3D" parent="Player" unique_id=738449609]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, -1)
+light_color = Color(0.55, 0.72, 0.92, 1)
+light_energy = 2.6
+omni_range = 3.8
+omni_attenuation = 1.3
+
 [node name="TeddyBearPickup" type="RigidBody3D" parent="." unique_id=2072048612 node_paths=PackedStringArray("visual_node") groups=["pickup", "teddy_bear"]]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -27.278084, 2.6189845, -13.7761135)
 visible = false
@@ -993,224 +910,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.220321, 0.05, -14.81594)
 collision_layer = 0
 collision_mask = 6
 script = ExtResource("ext_plate")
-glowing_platforms = NodePath("../GlowingPlatforms")
+glowing_platforms = NodePath("")
 door_portal = NodePath("../DoorPortal")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="PressurePlate" unique_id=1814204397]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
 shape = SubResource("BoxShape3D_plate")
-
-[node name="GlowingPlatforms" type="Node3D" parent="." unique_id=234845896]
-script = ExtResource("39_ria18")
-
-[node name="Platform1" type="StaticBody3D" parent="GlowingPlatforms" unique_id=1891197491]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 0.5, 7)
-visible = false
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="GlowingPlatforms/Platform1" unique_id=317970085]
-mesh = SubResource("BoxMesh_platform")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="GlowingPlatforms/Platform1" unique_id=207951917]
-shape = SubResource("BoxShape3D_platform")
-disabled = true
-
-[node name="Platform2" type="StaticBody3D" parent="GlowingPlatforms" unique_id=360346843]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 34, 1.01, 7)
-visible = false
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="GlowingPlatforms/Platform2" unique_id=914293106]
-mesh = SubResource("BoxMesh_platform")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="GlowingPlatforms/Platform2" unique_id=1488618554]
-shape = SubResource("BoxShape3D_platform")
-disabled = true
-
-[node name="Platform3" type="StaticBody3D" parent="GlowingPlatforms" unique_id=438383378]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 36, 1.51, 7)
-visible = false
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="GlowingPlatforms/Platform3" unique_id=525916276]
-mesh = SubResource("BoxMesh_platform")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="GlowingPlatforms/Platform3" unique_id=827983417]
-shape = SubResource("BoxShape3D_platform")
-disabled = true
-
-[node name="Platform4" type="StaticBody3D" parent="GlowingPlatforms" unique_id=903803373]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 38, 2.02, 7)
-visible = false
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="GlowingPlatforms/Platform4" unique_id=1905241330]
-mesh = SubResource("BoxMesh_platform")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="GlowingPlatforms/Platform4" unique_id=1854975607]
-shape = SubResource("BoxShape3D_platform")
-disabled = true
-
-[node name="Platform5" type="StaticBody3D" parent="GlowingPlatforms" unique_id=1246050237]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 40, 2.52, 7)
-visible = false
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="GlowingPlatforms/Platform5" unique_id=1586915623]
-mesh = SubResource("BoxMesh_platform")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="GlowingPlatforms/Platform5" unique_id=398367044]
-shape = SubResource("BoxShape3D_platform")
-disabled = true
-
-[node name="Platform6" type="StaticBody3D" parent="GlowingPlatforms" unique_id=816769614]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 3.03, 7)
-visible = false
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="GlowingPlatforms/Platform6" unique_id=1084203156]
-mesh = SubResource("BoxMesh_platform")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="GlowingPlatforms/Platform6" unique_id=1571443751]
-shape = SubResource("BoxShape3D_platform")
-disabled = true
-
-[node name="Platform7" type="StaticBody3D" parent="GlowingPlatforms" unique_id=222081791]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 44, 3.53, 7)
-visible = false
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="GlowingPlatforms/Platform7" unique_id=1953970418]
-mesh = SubResource("BoxMesh_platform")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="GlowingPlatforms/Platform7" unique_id=297450420]
-shape = SubResource("BoxShape3D_platform")
-disabled = true
-
-[node name="Platform8" type="StaticBody3D" parent="GlowingPlatforms" unique_id=526017885]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46, 4.04, 7)
-visible = false
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="GlowingPlatforms/Platform8" unique_id=764206304]
-mesh = SubResource("BoxMesh_platform")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="GlowingPlatforms/Platform8" unique_id=9278809]
-shape = SubResource("BoxShape3D_platform")
-disabled = true
-
-[node name="Platform9" type="StaticBody3D" parent="GlowingPlatforms" unique_id=2068306926]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48, 4.54, 7)
-visible = false
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="GlowingPlatforms/Platform9" unique_id=1876174270]
-mesh = SubResource("BoxMesh_platform")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="GlowingPlatforms/Platform9" unique_id=853467998]
-shape = SubResource("BoxShape3D_platform")
-disabled = true
-
-[node name="Platform10" type="StaticBody3D" parent="GlowingPlatforms" unique_id=748179134]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 50, 5.05, 7)
-visible = false
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="GlowingPlatforms/Platform10" unique_id=1951598247]
-mesh = SubResource("BoxMesh_platform")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="GlowingPlatforms/Platform10" unique_id=452757577]
-shape = SubResource("BoxShape3D_platform")
-disabled = true
-
-[node name="Platform11" type="StaticBody3D" parent="GlowingPlatforms" unique_id=1449613940]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 52, 5.56, 7)
-visible = false
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="GlowingPlatforms/Platform11" unique_id=808995774]
-mesh = SubResource("BoxMesh_platform")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="GlowingPlatforms/Platform11" unique_id=1095993736]
-shape = SubResource("BoxShape3D_platform")
-disabled = true
-
-[node name="Platform12" type="StaticBody3D" parent="GlowingPlatforms" unique_id=536864403]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 6.06, 7)
-visible = false
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="GlowingPlatforms/Platform12" unique_id=1097620887]
-mesh = SubResource("BoxMesh_platform")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="GlowingPlatforms/Platform12" unique_id=1403399417]
-shape = SubResource("BoxShape3D_platform")
-disabled = true
-
-[node name="Platform13" type="StaticBody3D" parent="GlowingPlatforms" unique_id=1571835835]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 56, 6.57, 7)
-visible = false
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="GlowingPlatforms/Platform13" unique_id=506668870]
-mesh = SubResource("BoxMesh_platform")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="GlowingPlatforms/Platform13" unique_id=1473322106]
-shape = SubResource("BoxShape3D_platform")
-disabled = true
-
-[node name="Platform14" type="StaticBody3D" parent="GlowingPlatforms" unique_id=1394960947]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58, 7.07, 7)
-visible = false
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="GlowingPlatforms/Platform14" unique_id=40448719]
-mesh = SubResource("BoxMesh_platform")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="GlowingPlatforms/Platform14" unique_id=1052026784]
-shape = SubResource("BoxShape3D_platform")
-disabled = true
-
-[node name="Platform15" type="StaticBody3D" parent="GlowingPlatforms" unique_id=1210367713]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, 7.58, 7)
-visible = false
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="GlowingPlatforms/Platform15" unique_id=647316178]
-mesh = SubResource("BoxMesh_platform")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="GlowingPlatforms/Platform15" unique_id=1701838874]
-shape = SubResource("BoxShape3D_platform")
-disabled = true
-
-[node name="Platform16" type="StaticBody3D" parent="GlowingPlatforms" unique_id=609672852]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 62, 8.08, 7)
-visible = false
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="GlowingPlatforms/Platform16" unique_id=1424324984]
-mesh = SubResource("BoxMesh_platform")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="GlowingPlatforms/Platform16" unique_id=1800338187]
-shape = SubResource("BoxShape3D_platform")
-disabled = true
-
-[node name="Platform17" type="StaticBody3D" parent="GlowingPlatforms" unique_id=1207450040]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 8.59, 7)
-visible = false
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="GlowingPlatforms/Platform17" unique_id=780593601]
-mesh = SubResource("BoxMesh_platform")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="GlowingPlatforms/Platform17" unique_id=71297507]
-shape = SubResource("BoxShape3D_platform")
-disabled = true
-
-[node name="Platform18" type="StaticBody3D" parent="GlowingPlatforms" unique_id=1422079255]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66, 9.09, 7)
-visible = false
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="GlowingPlatforms/Platform18" unique_id=1237584191]
-mesh = SubResource("BoxMesh_platform")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="GlowingPlatforms/Platform18" unique_id=586691667]
-shape = SubResource("BoxShape3D_platform")
-disabled = true
-
-[node name="Platform19" type="StaticBody3D" parent="GlowingPlatforms" unique_id=696505757]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 68, 9.6, 7)
-visible = false
-
-[node name="MeshInstance3D" type="MeshInstance3D" parent="GlowingPlatforms/Platform19" unique_id=1489628444]
-mesh = SubResource("BoxMesh_platform")
-
-[node name="CollisionShape3D" type="CollisionShape3D" parent="GlowingPlatforms/Platform19" unique_id=215681962]
-shape = SubResource("BoxShape3D_platform")
-disabled = true
 
 [node name="DoorPortal" type="Area3D" parent="." unique_id=1072701972]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 72.544556, 10.294997, 6.915813)
@@ -1245,6 +950,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 76.5, 10.3, 6.92)
 [node name="VignetteLayer" type="CanvasLayer" parent="." unique_id=428012509]
 layer = 10
 
+[node name="HorrorPostRect" type="ColorRect" parent="VignetteLayer" unique_id=329414054]
+material = SubResource("ShaderMaterial_ry84g")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
 [node name="VignetteRect" type="ColorRect" parent="VignetteLayer" unique_id=1196262748 node_paths=PackedStringArray("player", "camera")]
 material = SubResource("ShaderMaterial_vignette")
 anchors_preset = 15
@@ -1256,6 +970,9 @@ mouse_filter = 2
 script = ExtResource("ext_vignette_ctrl")
 player = NodePath("../../Player")
 camera = NodePath("../../CameraRig/Camera3D")
+inner_radius = 0.42
+outer_radius = 1.08
+vignette_opacity = 0.72
 aspect_correction = 0.7
 
 [node name="FadeCanvasLayer" type="CanvasLayer" parent="." unique_id=1543108474]
@@ -1276,7 +993,7 @@ script = ExtResource("ext_puz")
 player = NodePath("../Player")
 carry_system = NodePath("CarrySystem")
 pressure_plate = NodePath("../PressurePlate")
-glowing_platforms = NodePath("../GlowingPlatforms")
+glowing_platforms = NodePath("")
 door_portal = NodePath("../DoorPortal")
 target_room_marker = NodePath("../TargetRoomMarker")
 fade_layer = NodePath("../FadeCanvasLayer")
@@ -1295,15 +1012,22 @@ collision_layer = 0
 collision_mask = 2
 script = ExtResource("ext_parkour_zone")
 
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkourCameraZone" unique_id=648429138]
+shape = SubResource("BoxShape3D_u87qk")
+
 [node name="VoidBlockers" type="Node3D" parent="." unique_id=1410982341]
 
 [node name="CeilingBlocker" type="MeshInstance3D" parent="VoidBlockers" unique_id=1410982342]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.3, 21, 1.3)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.3, 19.6, 1.3)
 mesh = SubResource("BoxMesh_ceiling_blocker")
 
 [node name="LeftOuterWallBlocker" type="MeshInstance3D" parent="VoidBlockers" unique_id=1410982343]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -84, 12, 1.3)
 mesh = SubResource("BoxMesh_left_blocker")
+
+[node name="VoidAbyssFloor" type="MeshInstance3D" parent="VoidBlockers" unique_id=970925390]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 61, -14, 1.3)
+mesh = SubResource("BoxMesh_ll0or")
 
 [node name="ParkourSequencer" type="Node3D" parent="." unique_id=1940845474]
 script = ExtResource("44_5cv3f")
@@ -1314,8 +1038,8 @@ fov = 65.0
 script = ExtResource("46_hfxiw")
 
 [node name="LantaiBaru" type="MeshInstance3D" parent="." unique_id=1418703280]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6.28, -0.26825482, -0.06)
-material_override = SubResource("StandardMaterial3D_ria18")
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -26.5, -0.22, -0.06)
+material_override = ExtResource("44_dkkwl")
 mesh = SubResource("BoxMesh_h6dfy")
 
 [node name="StaticBody3D" type="StaticBody3D" parent="LantaiBaru" unique_id=271401905]
@@ -1328,67 +1052,80 @@ script = ExtResource("47_ria18")
 
 [node name="SpotLight_Meja1" type="SpotLight3D" parent="SpotLights_TitikFokus" unique_id=891375963]
 transform = Transform3D(1, 0, 0, 0, 0.6329038, 0.77423036, 0, -0.77423036, 0.6329038, -44.25, 11.03833, -6.0090427)
-light_color = Color(1, 0.84, 0.58, 1)
-light_energy = 4.0
+light_color = Color(0.95, 0.8, 0.54, 1)
+light_energy = 7.5
+light_volumetric_fog_energy = 5.5
 shadow_enabled = true
-spot_range = 22.1
-spot_angle = 56.11
+spot_range = 24.0
+spot_attenuation = 0.65
+spot_angle = 48.0
 spot_angle_attenuation = 1.8
 
 [node name="SpotLight_Meja2" type="SpotLight3D" parent="SpotLights_TitikFokus" unique_id=94359322]
 transform = Transform3D(1, 0, 0, 0, 0.6329039, 0.7742304, 0, -0.7742304, 0.6329039, -21.389824, 11.03833, -6.0090427)
-light_color = Color(1, 0.84, 0.58, 1)
-light_energy = 4.0
+light_color = Color(0.95, 0.8, 0.54, 1)
+light_energy = 7.5
+light_volumetric_fog_energy = 5.5
 shadow_enabled = true
-spot_range = 53.03
-spot_angle = 67.81
+spot_range = 24.0
+spot_attenuation = 0.65
+spot_angle = 48.0
 spot_angle_attenuation = 1.8
 
 [node name="SpotLight_Meja5" type="SpotLight3D" parent="SpotLights_TitikFokus" unique_id=875906834]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -57.466408, 11.03833, 0.25296378)
-light_color = Color(1, 0.84, 0.58, 1)
-light_energy = 4.0
+light_color = Color(0.95, 0.8, 0.54, 1)
+light_energy = 7.5
+light_volumetric_fog_energy = 5.5
 shadow_enabled = true
 distance_fade_enabled = true
-spot_range = 18.882
-spot_angle = 60.539516
+spot_range = 24.0
+spot_attenuation = 0.65
+spot_angle = 52.0
 spot_angle_attenuation = 1.8
 
 [node name="SpotLight_Meja3" type="SpotLight3D" parent="SpotLights_TitikFokus" unique_id=1538651138]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -12.47269, 12.21653, 4.4579754)
-light_color = Color(1, 0.84, 0.58, 1)
-light_energy = 4.0
+light_color = Color(0.95, 0.8, 0.54, 1)
+light_energy = 7.5
+light_volumetric_fog_energy = 5.5
 shadow_enabled = true
-spot_range = 22.444
-spot_angle = 85.76
+spot_range = 24.0
+spot_attenuation = 0.65
+spot_angle = 50.0
 spot_angle_attenuation = 1.8
 
 [node name="SpotLight_Meja4" type="SpotLight3D" parent="SpotLights_TitikFokus" unique_id=2018927981]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 14.462827, 12.21653, -0.20155239)
-light_color = Color(1, 0.84, 0.58, 1)
-light_energy = 4.0
+light_color = Color(0.95, 0.8, 0.54, 1)
+light_energy = 7.5
+light_volumetric_fog_energy = 5.5
 shadow_enabled = true
-spot_range = 22.444
-spot_angle = 85.76
+spot_range = 24.0
+spot_attenuation = 0.65
+spot_angle = 50.0
 spot_angle_attenuation = 1.8
 
 [node name="SpotLight_Meja7" type="SpotLight3D" parent="SpotLights_TitikFokus" unique_id=1383141532]
 transform = Transform3D(0.44472805, 3.9150795e-08, -0.8956657, 0.8956657, -1.9439682e-08, 0.44472805, 1.5229822e-16, -1, -4.37114e-08, 0.5791054, 12.21653, 4.4579754)
-light_color = Color(1, 0.84, 0.58, 1)
-light_energy = 4.0
+light_color = Color(0.96, 0.83, 0.58, 1)
+light_energy = 8.0
+light_volumetric_fog_energy = 5.8
 shadow_enabled = true
-spot_range = 37.171
-spot_angle = 60.91
+spot_range = 24.0
+spot_attenuation = 0.65
+spot_angle = 48.0
 spot_angle_attenuation = 1.8
 
 [node name="SpotLight_Meja8" type="SpotLight3D" parent="SpotLights_TitikFokus" unique_id=1302076030]
 transform = Transform3D(0.44472805, 3.9150795e-08, -0.8956657, 0.8956657, -1.9439682e-08, 0.44472805, 1.5229822e-16, -1, -4.3711395e-08, 24.932333, 12.21653, 4.4579754)
-light_color = Color(1, 0.84, 0.58, 1)
-light_energy = 4.0
+light_color = Color(0.95, 0.8, 0.54, 1)
+light_energy = 7.2
+light_volumetric_fog_energy = 5.5
 shadow_enabled = true
-spot_range = 4096.0
-spot_attenuation = 0.47
-spot_angle = 57.308537
+spot_range = 22.0
+spot_attenuation = 0.65
+spot_angle = 48.0
 spot_angle_attenuation = 1.8
 
 [node name="SpotLight_LemariTeddy" type="SpotLight3D" parent="SpotLights_TitikFokus" unique_id=1992847158]
@@ -1396,38 +1133,191 @@ transform = Transform3D(1, 0, 0, 0, 0.53976655, 0.8418147, 0, -0.8418147, 0.5397
 light_color = Color(1, 0.84, 0.58, 1)
 light_energy = 0.0
 light_indirect_energy = 1.325
+light_volumetric_fog_energy = 5.8
 shadow_enabled = true
 spot_range = 18.68
 spot_attenuation = 0.07
-spot_angle = 46.712784
+spot_angle = 42.0
 spot_angle_attenuation = 1.8
 
 [node name="SpotLight_LemariTeddy3" type="SpotLight3D" parent="SpotLights_TitikFokus" unique_id=743870855]
 transform = Transform3D(1, 0, 0, 0, -0.7197133, 0.69427145, 0, -0.69427145, -0.7197133, -6.414578, 12.93925, -19.45153)
 light_color = Color(1, 0.84, 0.58, 1)
-light_energy = 5.15
+light_energy = 7.5
 light_indirect_energy = 1.325
-spot_range = 28.015
-spot_attenuation = 1.32
-spot_angle = 47.452423
+light_volumetric_fog_energy = 5.0
+shadow_enabled = true
+spot_range = 26.0
+spot_attenuation = 0.65
+spot_angle = 44.0
 spot_angle_attenuation = 1.8
 
 [node name="SpotLight_MainanABCD" type="SpotLight3D" parent="SpotLights_TitikFokus" unique_id=596030457]
 transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, -35.83, 13.453557, 2.73024)
-light_color = Color(1, 0.84, 0.58, 1)
-light_energy = 10.99
+light_color = Color(0.94, 0.78, 0.52, 1)
+light_energy = 8.2
+light_volumetric_fog_energy = 5.5
 shadow_enabled = true
-spot_range = 20.33
-spot_angle = 57.2
+spot_range = 24.0
+spot_attenuation = 0.65
+spot_angle = 48.0
 spot_angle_attenuation = 1.8
 
 [node name="SpotLight_Babak3Area2" type="SpotLight3D" parent="SpotLights_TitikFokus" unique_id=1579363560]
-transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 33, 20.794592, 2)
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 33, 16.8, 2)
 light_color = Color(1, 0.88, 0.72, 1)
-light_energy = 3.5
-spot_range = 14.0
-spot_attenuation = 0.47
+light_energy = 7.8
+light_volumetric_fog_energy = 5.5
+shadow_enabled = true
+spot_range = 26.0
+spot_attenuation = 0.65
+spot_angle = 48.0
+
+[node name="SpotLight_Spawn" type="SpotLight3D" parent="SpotLights_TitikFokus" unique_id=690224807]
+transform = Transform3D(1, 0, 0, 0, 0.087155804, 0.9961947, 0, -0.9961947, 0.087155804, -63.5, 11.5, 7.5)
+light_color = Color(0.95, 0.82, 0.58, 1)
+light_energy = 7.0
+light_volumetric_fog_energy = 5.5
+shadow_enabled = true
+spot_range = 20.0
+spot_attenuation = 0.65
 spot_angle = 52.0
+
+[node name="SpotLight_ParkourMid" type="SpotLight3D" parent="SpotLights_TitikFokus" unique_id=245279950]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, 1, 0, -1, -4.371139e-08, 51, 17, 4.2)
+light_color = Color(0.9, 0.86, 0.78, 1)
+light_energy = 7.8
+light_volumetric_fog_energy = 5.5
+shadow_enabled = true
+spot_range = 26.0
+spot_attenuation = 0.6
+spot_angle = 52.0
+
+[node name="SpotLight_ParkourSummit" type="SpotLight3D" parent="SpotLights_TitikFokus" unique_id=1449910453]
+transform = Transform3D(1, 0, 0, 0, 0.087155804, 0.9961947, 0, -0.9961947, 0.087155804, 68.5, 17.2, 5.4)
+light_color = Color(0.98, 0.86, 0.68, 1)
+light_energy = 8.2
+light_volumetric_fog_energy = 5.5
+shadow_enabled = true
+spot_range = 24.0
+spot_attenuation = 0.6
+spot_angle = 50.0
+
+[node name="DustParticles" type="GPUParticles3D" parent="." unique_id=1559559486]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -63.5, 2.6, 9.6)
+script = ExtResource("49_5ywug")
+
+[node name="VoidRespawnZone" type="Area3D" parent="." unique_id=1845087015]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 60, -2.5, 1.3)
+script = ExtResource("46_h6dfy")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="VoidRespawnZone" unique_id=2017971445]
+shape = SubResource("BoxShape3D_k0nbe")
+
+[node name="ParkourRocks" type="Node3D" parent="." unique_id=1718017821]
+
+[node name="Rock_01_Anchor" parent="ParkourRocks" unique_id=1669678720 instance=ExtResource("19_7e5uw")]
+transform = Transform3D(4, 0, 0, 0, 2.4996293, 3.1227958, 0, -3.1227958, 2.4996293, 29.2, -0.75, 3.8)
+script = ExtResource("48_dkkwl")
+is_checkpoint = true
+respawn_offset = Vector3(-0.5, 1.95, 0.8)
+float_amplitude = 0.08
+float_period = 3.6
+
+[node name="StaticBody3D" type="StaticBody3D" parent="ParkourRocks/Rock_01_Anchor" unique_id=539812055]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkourRocks/Rock_01_Anchor/StaticBody3D" unique_id=262804370]
+transform = Transform3D(1, 0, 0, 0, 0.62524265, -0.78043044, 0, 0.78043044, 0.62524265, -0.169, -0.173, 0.177)
+shape = SubResource("BoxShape3D_y1o37")
+
+[node name="Rock_02_Forgotten" parent="ParkourRocks" unique_id=569649842 instance=ExtResource("19_7e5uw")]
+transform = Transform3D(4, 0, 0, 0, 2.4996293, 3.1227958, 0, -3.1227958, 2.4996293, 36.2, 0.65, 5.5)
+script = ExtResource("48_dkkwl")
+dimension_mode = "Forgotten"
+rock_index = 2
+float_period = 3.2
+float_phase_offset = 0.8
+
+[node name="StaticBody3D" type="StaticBody3D" parent="ParkourRocks/Rock_02_Forgotten" unique_id=1074291638]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkourRocks/Rock_02_Forgotten/StaticBody3D" unique_id=862810193]
+transform = Transform3D(1, 0, 0, 0, 0.62524265, -0.78043044, 0, 0.78043044, 0.62524265, -0.173, -0.175, 0.177)
+shape = SubResource("BoxShape3D_q0ejf")
+
+[node name="Rock_04_Remembered" parent="ParkourRocks" unique_id=1110827361 instance=ExtResource("19_7e5uw")]
+transform = Transform3D(4, 0, 0, 0, 2.4996293, 3.1227958, 0, -3.1227958, 2.4996293, 43.2, 2.1, 2.1)
+script = ExtResource("48_dkkwl")
+dimension_mode = "Remembered"
+rock_index = 3
+float_amplitude = 0.15
+float_period = 3.1
+float_phase_offset = 2.3
+
+[node name="StaticBody3D" type="StaticBody3D" parent="ParkourRocks/Rock_04_Remembered" unique_id=1318517981]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkourRocks/Rock_04_Remembered/StaticBody3D" unique_id=1720678296]
+transform = Transform3D(1, 0, 0, 0, 0.62524265, -0.78043044, 0, 0.78043044, 0.62524265, -0.171, -0.174, 0.177)
+shape = SubResource("BoxShape3D_ll0or")
+
+[node name="Rock_06_Anchor" parent="ParkourRocks" unique_id=1471560259 instance=ExtResource("19_7e5uw")]
+transform = Transform3D(4, 0, 0, 0, 2.4996293, 3.1227958, 0, -3.1227958, 2.4996293, 50.4, 3.6, 5.2)
+script = ExtResource("48_dkkwl")
+rock_index = 4
+is_checkpoint = true
+respawn_offset = Vector3(-0.5, 1.95, 0.8)
+float_amplitude = 0.08
+float_period = 4.0
+float_phase_offset = 0.4
+
+[node name="StaticBody3D" type="StaticBody3D" parent="ParkourRocks/Rock_06_Anchor" unique_id=1591749129]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkourRocks/Rock_06_Anchor/StaticBody3D" unique_id=1337603535]
+transform = Transform3D(1, 0, 0, 0, 0.62524265, -0.78043044, 0, 0.78043044, 0.62524265, -0.171, -0.174, 0.177)
+shape = SubResource("BoxShape3D_kwwm2")
+
+[node name="Rock_07_Remembered" parent="ParkourRocks" unique_id=1345782016 instance=ExtResource("19_7e5uw")]
+transform = Transform3D(4, 0, 0, 0, 2.4996293, 3.1227958, 0, -3.1227958, 2.4996293, 57.8, 5.15, 2.2)
+script = ExtResource("48_dkkwl")
+dimension_mode = "Remembered"
+rock_index = 5
+float_amplitude = 0.2
+float_period = 3.0
+float_phase_offset = 1.9
+
+[node name="StaticBody3D" type="StaticBody3D" parent="ParkourRocks/Rock_07_Remembered" unique_id=778467620]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkourRocks/Rock_07_Remembered/StaticBody3D" unique_id=424927068]
+transform = Transform3D(1, 0, 0, 0, 0.62524265, -0.78043044, 0, 0.78043044, 0.62524265, -0.173, -0.175, 0.177)
+shape = SubResource("BoxShape3D_vulqq")
+
+[node name="Rock_08_Forgotten" parent="ParkourRocks" unique_id=1419747037 instance=ExtResource("19_7e5uw")]
+transform = Transform3D(4, 0, 0, 0, 2.4996293, 3.1227958, 0, -3.1227958, 2.4996293, 65, 6.75, 5)
+script = ExtResource("48_dkkwl")
+dimension_mode = "Forgotten"
+rock_index = 6
+float_amplitude = 0.18
+float_period = 3.2
+float_phase_offset = 2.7
+
+[node name="StaticBody3D" type="StaticBody3D" parent="ParkourRocks/Rock_08_Forgotten" unique_id=588525497]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkourRocks/Rock_08_Forgotten/StaticBody3D" unique_id=2040580469]
+transform = Transform3D(1, 0, 0, 0, 0.62524265, -0.78043044, 0, 0.78043044, 0.62524265, -0.169, -0.173, 0.177)
+shape = SubResource("BoxShape3D_ul2ba")
+
+[node name="Rock_09_Summit" parent="ParkourRocks" unique_id=1095199743 instance=ExtResource("19_7e5uw")]
+transform = Transform3D(6, 0, 0, 0, 3.6691623, 4.747341, 0, -4.747341, 3.6691623, 73.66, 7.64, 4.68)
+script = ExtResource("48_dkkwl")
+rock_index = 7
+is_checkpoint = true
+respawn_offset = Vector3(-2, 2.85, 1.2)
+enable_float = false
+
+[node name="StaticBody3D" type="StaticBody3D" parent="ParkourRocks/Rock_09_Summit" unique_id=1842947739]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ParkourRocks/Rock_09_Summit/StaticBody3D" unique_id=393435130]
+transform = Transform3D(1, 0, 0, 0, 0.611527, -0.7912234, 0, 0.7912234, 0.611527, -0.168, -0.157, 0.187)
+shape = SubResource("BoxShape3D_xkoul")
 
 [connection signal="body_entered" from="remembered/TembokKebelah/TriggerArea" to="remembered/TembokKebelah" method="_on_trigger_area_body_entered"]
 [connection signal="plate_activated" from="PressurePlate" to="CutsceneCamTembok" method="_on_pressure_plate_activated"]

@@ -20,7 +20,7 @@ var _quests: Array[Dictionary] = [
 		"objectives": [
 			{"text": "Kumpulkan 3 kotak mainan ke slot ABCD", "complete": false, "progress": "0/3"},
 			{"text": "Bawa Teddy Bear ke pressure plate", "complete": false, "progress": ""},
-			{"text": "Naiki tangga putih menuju puncak", "complete": false, "progress": "0/19"},
+			{"text": "Seberangi batu melayang menuju puncak", "complete": false, "progress": "0/7"},
 			{"text": "Masuk ke dalam portal pintu", "complete": false, "progress": ""},
 		],
 	},

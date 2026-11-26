@@ -22,6 +22,10 @@ var _shift_flash_rect: ColorRect = null
 var _shift_distortion_rect: ColorRect = null
 var _shift_distortion_mat: ShaderMaterial = null
 var _shift_tween: Tween = null
+var _env_tween: Tween = null
+var _runtime_env: Environment = null
+var _horror_post_mat: ShaderMaterial = null
+var _vignette_ctrl: Node = null
 
 func _ready() -> void:
 	if remembered == null:
@@ -37,8 +41,9 @@ func _ready() -> void:
 	if door_portal == null:
 		door_portal = get_node_or_null("../DoorPortal")
 
+	_init_runtime_atmosphere()
 	setup_shift_hud()
-	apply_dimension_state(in_memory)
+	apply_dimension_state(in_memory, true)
 	remove_ceiling()
 	_sanitize_item_materials(self)
 
@@ -134,10 +139,88 @@ func _process(_delta: float) -> void:
 
 func toggle_dimension() -> void:
 	in_memory = not in_memory
-	apply_dimension_state(in_memory)
+	apply_dimension_state(in_memory, false)
 	play_shift_effect()
 	_update_hud_display()
 	dimension_shifted.emit(in_memory)
+
+
+func _init_runtime_atmosphere() -> void:
+	# Duplicate WorldEnvironment resource at runtime so mood shifts never mutate editor defaults
+	var world_env := get_node_or_null("WorldEnvironment") as WorldEnvironment
+	if world_env == null:
+		world_env = get_node_or_null("../WorldEnvironment") as WorldEnvironment
+	if world_env and world_env.environment:
+		_runtime_env = world_env.environment.duplicate() as Environment
+		world_env.environment = _runtime_env
+
+	var vig_layer := get_node_or_null("VignetteLayer")
+	if vig_layer == null:
+		vig_layer = get_node_or_null("../VignetteLayer")
+	if vig_layer:
+		var post_rect := vig_layer.get_node_or_null("HorrorPostRect") as ColorRect
+		if post_rect and post_rect.material is ShaderMaterial:
+			_horror_post_mat = post_rect.material as ShaderMaterial
+		_vignette_ctrl = vig_layer.get_node_or_null("VignetteRect")
+
+
+func _apply_dimension_atmosphere(mem_active: bool, immediate: bool = false) -> void:
+	# Remembered = dusty warm-sepia dread; Forgotten = bleak desaturated Limbo void
+	var target_ambient := Color(0.32, 0.34, 0.40, 1.0) if mem_active else Color(0.24, 0.31, 0.44, 1.0)
+	var target_amb_energy := 0.74 if mem_active else 0.62
+	var target_fog_col := Color(0.05, 0.065, 0.085, 1.0) if mem_active else Color(0.035, 0.06, 0.095, 1.0)
+	var target_vfog_albedo := Color(0.75, 0.76, 0.74, 1.0) if mem_active else Color(0.55, 0.68, 0.88, 1.0)
+	var target_vfog_density := 0.0045 if mem_active else 0.0065
+	var target_sat := 0.72 if mem_active else 0.26
+	var target_contrast := 0.96 if mem_active else 0.98
+	var target_brightness := 1.18 if mem_active else 1.16
+	var target_mood := 0.0 if mem_active else 1.0
+	var target_vig_inner := 0.42 if mem_active else 0.36
+	var target_vig_outer := 1.08 if mem_active else 0.98
+	var target_vig_opacity := 0.72 if mem_active else 0.78
+
+	if _env_tween and _env_tween.is_valid():
+		_env_tween.kill()
+
+	if immediate:
+		if _runtime_env:
+			_runtime_env.ambient_light_color = target_ambient
+			_runtime_env.ambient_light_energy = target_amb_energy
+			_runtime_env.fog_light_color = target_fog_col
+			_runtime_env.volumetric_fog_albedo = target_vfog_albedo
+			_runtime_env.volumetric_fog_density = target_vfog_density
+			_runtime_env.adjustment_saturation = target_sat
+			_runtime_env.adjustment_contrast = target_contrast
+			_runtime_env.adjustment_brightness = target_brightness
+		if _horror_post_mat:
+			_horror_post_mat.set_shader_parameter("mood_forgotten", target_mood)
+		if _vignette_ctrl and "inner_radius" in _vignette_ctrl:
+			_vignette_ctrl.set("inner_radius", target_vig_inner)
+			_vignette_ctrl.set("outer_radius", target_vig_outer)
+			_vignette_ctrl.set("vignette_opacity", target_vig_opacity)
+		return
+
+	_env_tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_OUT)
+	var dur := 0.45
+	if _runtime_env:
+		_env_tween.tween_property(_runtime_env, "ambient_light_color", target_ambient, dur)
+		_env_tween.tween_property(_runtime_env, "ambient_light_energy", target_amb_energy, dur)
+		_env_tween.tween_property(_runtime_env, "fog_light_color", target_fog_col, dur)
+		_env_tween.tween_property(_runtime_env, "volumetric_fog_albedo", target_vfog_albedo, dur)
+		_env_tween.tween_property(_runtime_env, "volumetric_fog_density", target_vfog_density, dur)
+		_env_tween.tween_property(_runtime_env, "adjustment_saturation", target_sat, dur)
+		_env_tween.tween_property(_runtime_env, "adjustment_contrast", target_contrast, dur)
+		_env_tween.tween_property(_runtime_env, "adjustment_brightness", target_brightness, dur)
+	if _horror_post_mat:
+		var start_mood := float(_horror_post_mat.get_shader_parameter("mood_forgotten"))
+		_env_tween.tween_method(
+			func(v: float) -> void: _horror_post_mat.set_shader_parameter("mood_forgotten", v),
+			start_mood, target_mood, dur
+		)
+	if _vignette_ctrl and "inner_radius" in _vignette_ctrl:
+		_env_tween.tween_property(_vignette_ctrl, "inner_radius", target_vig_inner, dur)
+		_env_tween.tween_property(_vignette_ctrl, "outer_radius", target_vig_outer, dur)
+		_env_tween.tween_property(_vignette_ctrl, "vignette_opacity", target_vig_opacity, dur)
 
 
 func play_shift_effect() -> void:
@@ -196,7 +279,16 @@ func _update_hud_display() -> void:
 			_hud_label.label_settings.font_color = Color(1.0, 0.72, 0.35)
 
 
-func apply_dimension_state(mem_active: bool) -> void:
+func apply_dimension_state(mem_active: bool, immediate: bool = false) -> void:
+	_apply_dimension_atmosphere(mem_active, immediate)
+	var parkour_rocks := get_node_or_null("ParkourRocks")
+	if parkour_rocks == null:
+		parkour_rocks = get_node_or_null("../ParkourRocks")
+	if parkour_rocks:
+		for rock in parkour_rocks.get_children():
+			if rock.has_method("set_dimension_active"):
+				rock.call("set_dimension_active", mem_active, immediate)
+
 	if remembered:
 		remembered.visible = true
 		for child in remembered.get_children():
@@ -231,14 +323,14 @@ func apply_dimension_state(mem_active: bool) -> void:
 		if col:
 			col.set_deferred("disabled", not can_access)
 
-	# Pintu portal keluar hanya muncul di Dunia Ingatan (Remembered Dimension)
+	# Pintu portal keluar tetap terlihat & aktif di kedua dimensi di puncak batu parkour
 	if exit_door:
-		exit_door.visible = mem_active
-		_set_collisions(exit_door, mem_active)
+		exit_door.visible = true
+		_set_collisions(exit_door, true)
 	if door_portal:
-		door_portal.visible = mem_active
-		door_portal.set_deferred("monitoring", mem_active)
-		door_portal.set_deferred("monitorable", mem_active)
+		door_portal.visible = true
+		door_portal.set_deferred("monitoring", true)
+		door_portal.set_deferred("monitorable", true)
 
 	if puzzle_manager and puzzle_manager.has_method("validate_dimension_collision"):
 		puzzle_manager.call("validate_dimension_collision", "remembered" if mem_active else "forgotten")
@@ -265,22 +357,24 @@ func _sanitize_item_materials(root_node: Node) -> void:
 			continue
 
 		var p_path: String = str(mesh_inst.get_path()).to_lower() if mesh_inst.is_inside_tree() else mesh_inst.name.to_lower()
-		# Jangan ubah struktur ruangan/dinding, karakter utama, partikel debu, effect jam, glowing platform, gerbang cahaya portal, atau ghost hint
-		if "chapter 1 kosong" in p_path or "char no light" in p_path or "dustparticles" in p_path or "timestop" in p_path or "glowingplatforms" in p_path or "portal" in p_path or "hint" in p_path or "ghost" in p_path:
+		var is_carpet: bool = "persian malayer rug" in p_path
+		# Jangan ubah struktur dinding/karakter/partikel/efek/portal/hint/parkourrocks, KECUALI karpet Persia agar warna merahnya tidak neon
+		if not is_carpet and ("chapter 1 kosong" in p_path or "char no light" in p_path or "dustparticles" in p_path or "timestop" in p_path or "glowingplatforms" in p_path or "parkourrocks" in p_path or "portal" in p_path or "hint" in p_path or "ghost" in p_path):
 			continue
 
 		# Deteksi apakah node ini merupakan bagian dari mainan / item interaktif
 		var is_toy: bool = false
-		var curr: Node = mesh_inst
-		while curr and curr != root_node:
-			var c_name: String = curr.name.to_lower()
-			if c_name in ["sketchfab_scene8", "sketchfab_scene22", "sketchfab_scene2", "sketchfab_scene7", "sketchfab_scene13", "sketchfab_scene19", "pushabletoyblock", "abc_toy_model"]:
-				is_toy = true
-				break
-			if "toy" in c_name or "cube" in c_name or "car" in c_name or "duck" in c_name or "bear" in c_name or "block" in c_name:
-				is_toy = true
-				break
-			curr = curr.get_parent()
+		if not is_carpet:
+			var curr: Node = mesh_inst
+			while curr and curr != root_node:
+				var c_name: String = curr.name.to_lower()
+				if c_name in ["sketchfab_scene8", "sketchfab_scene22", "sketchfab_scene2", "sketchfab_scene7", "sketchfab_scene13", "sketchfab_scene19", "pushabletoyblock", "abc_toy_model"]:
+					is_toy = true
+					break
+				if "toy" in c_name or "cube" in c_name or "car" in c_name or "duck" in c_name or "bear" in c_name or "block" in c_name:
+					is_toy = true
+					break
+				curr = curr.get_parent()
 
 		for s in range(mesh_inst.mesh.get_surface_count()):
 			var mat: Material = mesh_inst.get_surface_override_material(s)
@@ -289,10 +383,14 @@ func _sanitize_item_materials(root_node: Node) -> void:
 
 			if mat is StandardMaterial3D:
 				var sm: StandardMaterial3D = mat
+				# Jangan sentuh material transparan/ghost (misal aura Teddy Bear saat Forgotten)
+				if sm.transparency != BaseMaterial3D.TRANSPARENCY_DISABLED and sm.shading_mode == BaseMaterial3D.SHADING_MODE_UNSHADED:
+					continue
+
 				var changed: bool = false
 				var new_sm: StandardMaterial3D = sm.duplicate() as StandardMaterial3D
 
-				# 1. Hentikan unshaded (penyebab utama truk mainan / toy_car menyala sendiri di kegelapan)
+				# 1. Hentikan unshaded (penyebab utama truk mainan / lantai menyala sendiri di kegelapan)
 				if new_sm.shading_mode == BaseMaterial3D.SHADING_MODE_UNSHADED:
 					new_sm.shading_mode = BaseMaterial3D.SHADING_MODE_PER_PIXEL
 					changed = true
@@ -302,9 +400,9 @@ func _sanitize_item_materials(root_node: Node) -> void:
 					new_sm.emission_enabled = false
 					changed = true
 
-				# 3. Kunci roughness >= 0.75 agar material tidak mengkilap berlebihan seperti kaca/plastik basah (khususnya teddybear dan balok mainan)
-				if new_sm.roughness < 0.75:
-					new_sm.roughness = 0.85
+				# 3. Kunci roughness >= 0.78 agar material tidak mengkilap berlebihan seperti plastik basah
+				if new_sm.roughness < 0.78:
+					new_sm.roughness = 0.86
 					changed = true
 
 				# 4. Hilangkan metallic pada benda non-logam
@@ -312,15 +410,20 @@ func _sanitize_item_materials(root_node: Node) -> void:
 					new_sm.metallic = 0.0
 					changed = true
 
-				# 5. Redupkan albedo mainan & item yang terlalu mencolok/jenuh di ruangan horor gelap agar menyatu alami ala Little Nightmares
-				if is_toy:
-					new_sm.albedo_color = Color(0.42, 0.42, 0.40, 1.0)
+				# 5. Redupkan & usangkan warna agar menyatu dengan mood Little Nightmares tanpa menghilangkan warna asli objek
+				var c: Color = new_sm.albedo_color
+				if is_carpet:
+					# Redupkan merah neon karpet Persia menjadi merah marun tua berdebu tapi motif tetap jelas
+					new_sm.albedo_color = Color(c.r * 0.72, c.g * 0.62, c.b * 0.62, c.a)
+					new_sm.roughness = 0.94
 					changed = true
-				else:
-					var c: Color = new_sm.albedo_color
-					if (c.r + c.g + c.b) > 2.5:
-						new_sm.albedo_color = Color(c.r * 0.7, c.g * 0.7, c.b * 0.7, c.a)
-						changed = true
+				elif is_toy:
+					# Pertahankan rona warna mainan tapi desaturasi & gelapkan supaya tidak terlihat seperti plastik neon
+					new_sm.albedo_color = Color.from_hsv(c.h, c.s * 0.58, clampf(c.v * 0.52, 0.16, 0.52), c.a)
+					changed = true
+				elif c.s > 0.55 or c.v > 0.68:
+					new_sm.albedo_color = Color.from_hsv(c.h, minf(c.s, 0.48), minf(c.v, 0.62), c.a)
+					changed = true
 
 				if changed:
 					mesh_inst.set_surface_override_material(s, new_sm)

@@ -13,8 +13,7 @@ func _ready() -> void:
 		player = get_node_or_null("../Player")
 
 	# Konfigurasi partikel debu halus atmosferik (Little Nightmares Style)
-	# Partikel sedikit (~35) dan berpinggiran pudar lembut agar menyatu dengan kabut gelap
-	amount = 35
+	amount = 90
 	preprocess = 4.0
 	visibility_aabb = AABB(Vector3(-35, -12, -35), Vector3(70, 24, 70))
 	emitting = true
@@ -24,7 +23,7 @@ func _ready() -> void:
 	# Setup Process Material
 	var mat := ParticleProcessMaterial.new()
 	mat.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_BOX
-	mat.emission_box_extents = Vector3(25.0, 8.0, 16.0)
+	mat.emission_box_extents = Vector3(18.0, 7.0, 12.0)
 
 	mat.direction = Vector3(0.0, 0.3, 0.0)
 	mat.spread = 180.0
@@ -57,9 +56,9 @@ func _ready() -> void:
 
 	process_material = mat
 
-	# Setup Radial GradientTexture2D (buram lembut, bukan kotak piksel tajam / bukan seperti bintang)
+	# Setup Radial GradientTexture2D (buram lembut agar terlihat alami melayang di berkas cahaya)
 	var rad_grad := Gradient.new()
-	rad_grad.set_color(0, Color(1.0, 1.0, 1.0, 0.18))
+	rad_grad.set_color(0, Color(1.0, 1.0, 1.0, 0.28))
 	rad_grad.set_color(1, Color(1.0, 1.0, 1.0, 0.0))
 	var rad_tex := GradientTexture2D.new()
 	rad_tex.gradient = rad_grad
@@ -69,15 +68,15 @@ func _ready() -> void:
 	rad_tex.width = 64
 	rad_tex.height = 64
 
-	# Setup QuadMesh kecil (0.012 x 0.012)
+	# Setup QuadMesh proporsional agar terbaca di jarak kamera 2.5D (~24m)
 	var quad := QuadMesh.new()
-	quad.size = Vector2(0.012, 0.012)
+	quad.size = Vector2(0.065, 0.065)
 
 	var mesh_mat := StandardMaterial3D.new()
 	mesh_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mesh_mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	mesh_mat.albedo_texture = rad_tex
-	mesh_mat.albedo_color = Color(1.0, 1.0, 1.0, 1.0)
+	mesh_mat.albedo_color = Color(0.95, 0.90, 0.80, 1.0)
 	mesh_mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
 	mesh_mat.no_depth_test = false
 	mesh_mat.render_priority = -1

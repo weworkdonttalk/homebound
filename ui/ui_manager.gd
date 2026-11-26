@@ -234,13 +234,20 @@ func _bind_chapter1_events(scene_root: Node) -> void:
 	if plate and plate.has_signal("plate_activated"):
 		plate.connect("plate_activated", _on_ch1_plate_activated)
 
-	# 4. StepStairRevealer / GlowingPlatforms (Tangga putih)
-	var stairs := scene_root.find_child("GlowingPlatforms", true, false)
-	if stairs:
-		if stairs.has_signal("stair_revealed"):
-			stairs.connect("stair_revealed", _on_ch1_stair_revealed)
-		if stairs.has_signal("all_platforms_activated"):
-			stairs.connect("all_platforms_activated", _on_ch1_all_stairs_activated)
+	# 4. Parkour batu melayang / fallback StepStairRevealer
+	var void_zone := scene_root.find_child("VoidRespawnZone", true, false)
+	if void_zone:
+		if void_zone.has_signal("parkour_progress_updated"):
+			void_zone.connect("parkour_progress_updated", _on_ch1_parkour_progress)
+		if void_zone.has_signal("parkour_completed"):
+			void_zone.connect("parkour_completed", _on_ch1_all_stairs_activated)
+	else:
+		var stairs := scene_root.find_child("GlowingPlatforms", true, false)
+		if stairs:
+			if stairs.has_signal("stair_revealed"):
+				stairs.connect("stair_revealed", _on_ch1_stair_revealed)
+			if stairs.has_signal("all_platforms_activated"):
+				stairs.connect("all_platforms_activated", _on_ch1_all_stairs_activated)
 
 	# 5. DoorPortal (Portal pintu)
 	var portal := scene_root.find_child("DoorPortal", true, false)
@@ -300,6 +307,17 @@ func _on_ch1_plate_activated() -> void:
 	_quest_guide.show_objective_toast()
 
 
+func _on_ch1_parkour_progress(step_index: int, total_rocks: int) -> void:
+	if _ch1_stairs_done or not is_instance_valid(_quest_guide):
+		return
+	if not _ch1_plate_done:
+		_on_ch1_plate_activated()
+	_quest_guide.set_objective_progress(0, 2, "%d/%d" % [mini(step_index, total_rocks), total_rocks])
+	if not _ch1_stairs_started:
+		_ch1_stairs_started = true
+		_quest_guide.show_objective_toast()
+
+
 func _on_ch1_stair_revealed(index: int, _plat: Node) -> void:
 	if _ch1_stairs_done or not is_instance_valid(_quest_guide):
 		return
@@ -315,7 +333,9 @@ func _on_ch1_all_stairs_activated() -> void:
 	if _ch1_stairs_done or not is_instance_valid(_quest_guide):
 		return
 	_ch1_stairs_done = true
-	_quest_guide.set_objective_progress(0, 2, "19/19")
+	var void_zone := get_tree().current_scene.find_child("VoidRespawnZone", true, false) if get_tree().current_scene else null
+	var total := int(void_zone.get("_total_rocks")) if void_zone and "_total_rocks" in void_zone else 7
+	_quest_guide.set_objective_progress(0, 2, "%d/%d" % [total, total])
 	_quest_guide.set_objective_completed(0, 2, true)
 	_quest_guide.show_objective_toast()
 

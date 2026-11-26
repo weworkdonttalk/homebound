@@ -19,6 +19,12 @@ extends Node3D
 ## Durasi animasi fade-out dalam detik
 @export var fade_out_duration: float = 1.0
 
+## Rasio minimal cahaya lampu saat pemain jauh agar kedalaman ruangan tetap terlihat samar
+@export_range(0.0, 0.5, 0.02) var min_energy_ratio: float = 0.28
+
+## Lampu yang memiliki kedipan filamen halus psikologis (tanpa konflik dengan proximity fade)
+@export var flicker_lights: Array[String] = ["SpotLight_Meja1", "SpotLight_Meja4", "SpotLight_Babak3Area2"]
+
 ## Lampu yang dikecualikan (misal SpotLight_LemariTeddy untuk puzzle teddy bear, SpotLight_Meja7 untuk puzzle pressure plate, SpotLight_Meja8 selalu menyala normal tanpa fade)
 @export var exclude_lights: Array[String] = ["SpotLight_LemariTeddy", "SpotLight_Meja7", "SpotLight_Meja8"]
 
@@ -26,9 +32,13 @@ extends Node3D
 class LightTrack:
 	var light: Light3D
 	var target_energy: float = 4.0
-	var progress: float = 0.0 # 0.0 (padam) hingga 1.0 (menyala penuh)
+	var progress: float = 0.0 # 0.0 (redup baseline) hingga 1.0 (menyala penuh)
 	var is_lit: bool = false
 	var floor_pos: Vector2 = Vector2.ZERO
+	var has_flicker: bool = false
+	var flicker_mul: float = 1.0
+	var flicker_timer: float = 1.0
+	var flicker_phase: float = 0.0
 
 var _tracked_lights: Array[LightTrack] = []
 var _player: Node3D = null
@@ -66,10 +76,13 @@ func _init_tracked_lights() -> void:
 			lt.progress = 0.0
 			lt.is_lit = false
 			lt.floor_pos = _compute_floor_pos(child)
+			lt.has_flicker = child.name in flicker_lights
+			lt.flicker_timer = randf_range(0.8, 3.2)
+			lt.flicker_phase = randf_range(0.0, TAU)
 
-			# Awalnya lampu padam (0 energy & tidak visible untuk menghemat draw call/shadow)
-			child.light_energy = 0.0
-			child.visible = false
+			# Awalnya lampu redup samar (menjaga kedalaman ruangan tanpa gelap total)
+			child.light_energy = target_energy * min_energy_ratio
+			child.visible = (min_energy_ratio > 0.001)
 
 			_tracked_lights.append(lt)
 
@@ -130,12 +143,24 @@ func _process(delta: float) -> void:
 		else:
 			lt.progress = move_toward(lt.progress, 0.0, delta / max(fade_out_duration, 0.05))
 
-		# Interpolasi halus kurva Smoothstep (Hermite): 3x^2 - 2x^3
+		# Interpolasi halus kurva Smoothstep (Hermite): 3x^2 - 2x^3 dari min_energy_ratio -> 1.0
 		var smooth_t := lt.progress * lt.progress * (3.0 - 2.0 * lt.progress)
-		lt.light.light_energy = smooth_t * lt.target_energy
+		var energy_ratio := lerpf(min_energy_ratio, 1.0, smooth_t)
 
-		# Visibilitas diaktifkan jika menyala, dimatikan jika padam penuh (optimasi GPU)
-		lt.light.visible = (lt.progress > 0.001)
+		# Kedipan filamen halus psikologis pada lampu terpilih (tanpa mati total mendadak)
+		if lt.has_flicker:
+			lt.flicker_phase += delta
+			lt.flicker_timer -= delta
+			if lt.flicker_timer <= 0.0:
+				lt.flicker_mul = randf_range(0.42, 0.72)
+				lt.flicker_timer = randf_range(1.6, 4.4)
+			else:
+				var hum := 0.96 + 0.04 * sin(lt.flicker_phase * 17.0)
+				lt.flicker_mul = lerpf(lt.flicker_mul, hum, clampf(delta * 10.0, 0.0, 1.0))
+			energy_ratio *= lt.flicker_mul
+
+		lt.light.light_energy = energy_ratio * lt.target_energy
+		lt.light.visible = (energy_ratio > 0.005)
 
 
 ## Menyalakan SpotLight_Meja7 secara permanen (dipicu saat teddy bear diletakkan di pressure plate)

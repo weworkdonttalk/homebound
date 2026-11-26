@@ -79,6 +79,19 @@ class_name CinematicCameraRig
 @export var min_bounds: Vector3 = Vector3(-56.5, 8.5, 23.5)
 @export var max_bounds: Vector3 = Vector3(82.0, 16.0, 28.5)
 
+@export_group("Room Divider & Wall Occlusion")
+## Aktifkan pembatas kamera per ruangan & fade tembok tengah jika menghalangi pandangan
+@export var room_divider_enabled: bool = true
+## Posisi X tembok pembatas antara Ruangan 1 dan Ruangan 2 (Parkour)
+@export var room_divider_x: float = 23.6
+## Batas X maksimal kamera saat pemain masih di Ruangan 1 agar tembok tidak memotong layar
+@export var room1_max_cam_x: float = 14.5
+## Batas X minimal kamera saat pemain sudah masuk Ruangan 2 agar tembok tidak menghalangi
+@export var room2_min_cam_x: float = 34.5
+## Transparansi tembok (0=padat, 0.88=sangat transparan) saat berada di antara kamera dan pemain
+@export_range(0.0, 0.98) var occlusion_fade_transparency: float = 0.88
+@export var occlusion_fade_speed: float = 10.0
+
 ## Mode Telekinesis 3D (saat true, CameraRig pause dan menyerahkan kendali pada TelekinesisCamera3D)
 @export var is_telekinesis_mode: bool = false
 
@@ -91,6 +104,8 @@ var _sway_time: float = 0.0
 var _current_fov: float = 42.0
 var _in_parkour_zone: bool = false
 var _look_ahead_offset: Vector3 = Vector3.ZERO
+var _has_partition_wall: bool = false
+var _partition_wall_meshes: Array[GeometryInstance3D] = []
 
 # FastNoiseLite untuk goyangan organik
 var _noise_x: FastNoiseLite = null
@@ -116,6 +131,7 @@ func _ready() -> void:
 
 	# Inisialisasi FastNoiseLite untuk organic sway
 	_setup_noise()
+	_cache_partition_walls()
 
 	# Inisialisasi anchor awal di posisi CameraRig yang diset di scene
 	_camera_anchor = global_position
@@ -124,6 +140,20 @@ func _ready() -> void:
 
 	_camera_anchor = _clamp_bounds(_camera_anchor)
 	global_position = _camera_anchor
+
+
+func _cache_partition_walls() -> void:
+	_partition_wall_meshes.clear()
+	_has_partition_wall = false
+	var scene_root := get_parent()
+	if scene_root == null:
+		return
+	var plane_004 := scene_root.find_child("Plane_004", true, false)
+	if plane_004:
+		_has_partition_wall = true
+		for child in plane_004.find_children("*", "MeshInstance3D", true):
+			if child is GeometryInstance3D:
+				_partition_wall_meshes.append(child as GeometryInstance3D)
 
 
 func _setup_noise() -> void:
@@ -149,10 +179,35 @@ func _setup_noise() -> void:
 
 
 func _clamp_bounds(pos: Vector3) -> Vector3:
-	pos.x = clampf(pos.x, min_bounds.x, max_bounds.x)
+	var min_x := min_bounds.x
+	var max_x := max_bounds.x
+	if room_divider_enabled and _has_partition_wall and target != null:
+		if target.global_position.x < room_divider_x:
+			max_x = minf(max_x, room1_max_cam_x)
+		else:
+			min_x = maxf(min_x, room2_min_cam_x)
+	pos.x = clampf(pos.x, min_x, max_x)
 	pos.y = clampf(pos.y, min_bounds.y, max_bounds.y)
 	pos.z = clampf(pos.z, min_bounds.z, max_bounds.z)
 	return pos
+
+
+func _update_wall_occlusion(delta: float) -> void:
+	if not _has_partition_wall or _partition_wall_meshes.is_empty() or camera == null or target == null:
+		return
+
+	var cam_x := camera.global_position.x
+	var player_x := target.global_position.x
+	# Tembok pembatas (Plane_004) menghalangi jika berada di antara kamera & pemain atau kamera melintasi zona tembok
+	var wall_x := room_divider_x + 0.25
+	var crosses_wall := (cam_x - wall_x) * (player_x - wall_x) < 0.0
+	var near_wall_transition := cam_x > (room1_max_cam_x + 1.0) and cam_x < (room2_min_cam_x - 1.0)
+	var target_trans := occlusion_fade_transparency if (crosses_wall or near_wall_transition) else 0.0
+	var t := clampf(occlusion_fade_speed * delta, 0.0, 1.0)
+
+	for mi in _partition_wall_meshes:
+		if is_instance_valid(mi):
+			mi.transparency = lerpf(mi.transparency, target_trans, t)
 
 
 func set_telekinesis_mode(_val: bool) -> void:
@@ -162,6 +217,7 @@ func set_telekinesis_mode(_val: bool) -> void:
 
 
 func _process(delta: float) -> void:
+	_update_wall_occlusion(delta)
 	if _is_focusing or target == null:
 		return
 
