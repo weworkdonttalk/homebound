@@ -1,0 +1,92 @@
+[gd_scene load_steps=9 format=3 uid="uid://cwjkpc2y4oqh7"]
+
+[ext_resource type="PackedScene" uid="uid://c07owbwygw67b" path="res://assets/environment/chapter_2/wooden_door.glb" id="1_i5led"]
+[ext_resource type="Texture2D" uid="uid://bkgttfpm5r5tx" path="res://assets/textures/worn_plaster/worn_plaster_wall_diff_4k.jpg" id="2_35vsr"]
+[ext_resource type="Script" path="res://scripts/gameplay/interactive_door.gd" id="3_door_script"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0xm2m"]
+albedo_texture = ExtResource("2_35vsr")
+
+[sub_resource type="BoxMesh" id="BoxMesh_lquwl"]
+material = SubResource("StandardMaterial3D_0xm2m")
+size = Vector3(1, 1.159668, 1)
+
+[sub_resource type="Animation" id="Animation_reset"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sketchfab_Scene/Sketchfab_model/14b59550f9d940eba8b487ab21696651_obj_cleaner_materialmerger_gles/engsel:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(1.5707964, 0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_buka"]
+resource_name = "buka"
+length = 1.2
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sketchfab_Scene/Sketchfab_model/14b59550f9d940eba8b487ab21696651_obj_cleaner_materialmerger_gles/engsel:rotation")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 1.2),
+"transitions": PackedFloat32Array(0.35, 1),
+"update": 0,
+"values": [Vector3(1.5707964, 0, 0), Vector3(1.5707964, -1.5707964, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_tutup"]
+resource_name = "tutup"
+length = 1.0
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("Sketchfab_Scene/Sketchfab_model/14b59550f9d940eba8b487ab21696651_obj_cleaner_materialmerger_gles/engsel:rotation")
+tracks/0/interp = 2
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 1),
+"transitions": PackedFloat32Array(2.5, 1),
+"update": 0,
+"values": [Vector3(1.5707964, -1.5707964, 0), Vector3(1.5707964, 0, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_wooden_door"]
+_data = {
+&"RESET": SubResource("Animation_reset"),
+&"buka": SubResource("Animation_buka"),
+&"tutup": SubResource("Animation_tutup")
+}
+
+[node name="pintu" type="StaticBody3D" unique_id=106688039]
+script = ExtResource("3_door_script")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=123456789]
+libraries/ = SubResource("AnimationLibrary_wooden_door")
+
+[node name="Sketchfab_Scene" parent="." unique_id=1289597472 instance=ExtResource("1_i5led")]
+transform = Transform3D(-0.03530107, 0, -0.9993767, 0, 1, 0, 0.9993767, 0, -0.03530107, -3.8282564, 0.14509523, 6.421791)
+
+[node name="engsel" type="Node3D" parent="Sketchfab_Scene/Sketchfab_model/14b59550f9d940eba8b487ab21696651_obj_cleaner_materialmerger_gles" parent_id_path=PackedInt32Array(1289597472, 1603062662) index="0" unique_id=1110903781]
+transform = Transform3D(1, 0, 0, 0, 2.220446e-16, -1, 0, 1, 2.220446e-16, 1.418181, 0.050094604, 2.9391384)
+
+[node name="MeshInstance3D8" type="MeshInstance3D" parent="." unique_id=905292648]
+transform = Transform3D(-0.21146883, 0, -0.47715545, 0, 7.683965, 0, 6.184974, 0, -0.009500582, -3.6477923, 3.1848896, 1.9195962)
+mesh = SubResource("BoxMesh_lquwl")
+
+[node name="MeshInstance3D7" type="MeshInstance3D" parent="." unique_id=538233274]
+transform = Transform3D(0.216968, 0, -0.4771469, 0, 7.683965, 0, 6.1848636, 0, 0.009747643, -3.6477923, 3.1848896, 10.929157)
+mesh = SubResource("BoxMesh_lquwl")
+
+[node name="MeshInstance3D9" type="MeshInstance3D" parent="." unique_id=885795067]
+transform = Transform3D(0.1107923, 0, -0.46943673, 0, 1.1562412, 0, 3.158232, 0, 0.009590134, -3.7414253, 6.949587, 6.361084)
+mesh = SubResource("BoxMesh_lquwl")
+
+[editable path="Sketchfab_Scene"]

@@ -1,0 +1,23 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://vwcplrly7pmy"]
+
+[ext_resource type="Texture2D" uid="uid://dhy7v0by0s2b1" path="res://assets/textures/peeling_painted_wall/textures/peeling_painted_wall_diff_4k.jpg" id="1_diff"]
+[ext_resource type="Texture2D" uid="uid://btvndi2v6sjuw" path="res://assets/textures/peeling_painted_wall/textures/peeling_painted_wall_nor_gl_4k.jpg" id="2_nor"]
+[ext_resource type="Texture2D" uid="uid://dxmq3stl8jun1" path="res://assets/textures/peeling_painted_wall/textures/peeling_painted_wall_arm_4k.jpg" id="3_arm"]
+
+[resource]
+resource_name = "peeling_painted_wall"
+cull_mode = 2
+albedo_color = Color(0.82, 0.82, 0.82, 1)
+albedo_texture = ExtResource("1_diff")
+roughness = 0.85
+roughness_texture = ExtResource("3_arm")
+roughness_texture_channel = 1
+normal_enabled = true
+normal_texture = ExtResource("2_nor")
+ao_enabled = true
+ao_texture = ExtResource("3_arm")
+uv1_scale = Vector3(0.4, 0.4, 0.4)
+uv1_triplanar = true
+uv1_triplanar_sharpness = 4.0
+uv1_world_triplanar = true
+texture_filter = 5
