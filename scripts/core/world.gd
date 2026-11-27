@@ -26,6 +26,7 @@ var _env_tween: Tween = null
 var _runtime_env: Environment = null
 var _horror_post_mat: ShaderMaterial = null
 var _vignette_ctrl: Node = null
+var _toggle_cooldown: float = 0.0
 
 func _ready() -> void:
 	if remembered == null:
@@ -131,13 +132,18 @@ func _input(event: InputEvent) -> void:
 			toggle_dimension()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	if _toggle_cooldown > 0.0:
+		_toggle_cooldown = maxf(_toggle_cooldown - delta, 0.0)
 	# Fallback poll jika input event terlewat
 	if Input.is_action_just_pressed("shifting"):
 		toggle_dimension()
 
 
 func toggle_dimension() -> void:
+	if _toggle_cooldown > 0.0:
+		return
+	_toggle_cooldown = 0.20
 	in_memory = not in_memory
 	apply_dimension_state(in_memory, false)
 	play_shift_effect()
@@ -295,13 +301,17 @@ func apply_dimension_state(mem_active: bool, immediate: bool = false) -> void:
 			var c_name: String = child.name.to_lower()
 			# Perabot kamar utama (kasur, meja, rak, lilin, mainan, balok di area x < 22) selalu permanen dan tidak hilang saat shifting
 			var is_permanent_furniture: bool = (
-				"scene5" in c_name or "scene6" in c_name or "scene7" in c_name or
+				"scene5" in c_name or "scene6" in c_name or
 				"scene8" in c_name or "scene9" in c_name or "scene10" in c_name or
 				"scene11" in c_name or "scene12" in c_name or "scene13" in c_name or
 				"scene14" in c_name or "scene15" in c_name or "pushabletoyblock" in c_name or
-				child.position.x < 22.0
+				"candle" in c_name or child.position.x < 22.0
 			)
-			if is_permanent_furniture:
+			if "scene7" in c_name:
+				var unlocked := bool(teddy_pickup.get("is_unlocked")) if (teddy_pickup and "is_unlocked" in teddy_pickup) else false
+				child.visible = unlocked
+				_set_collisions(child, unlocked)
+			elif is_permanent_furniture:
 				child.visible = true
 				_set_collisions(child, true)
 			else:
@@ -335,8 +345,6 @@ func apply_dimension_state(mem_active: bool, immediate: bool = false) -> void:
 	if puzzle_manager and puzzle_manager.has_method("validate_dimension_collision"):
 		puzzle_manager.call("validate_dimension_collision", "remembered" if mem_active else "forgotten")
 
-	_sanitize_item_materials(self)
-
 
 func _set_collisions(node: Node, active: bool) -> void:
 	if node is CollisionShape3D:
@@ -359,7 +367,7 @@ func _sanitize_item_materials(root_node: Node) -> void:
 		var p_path: String = str(mesh_inst.get_path()).to_lower() if mesh_inst.is_inside_tree() else mesh_inst.name.to_lower()
 		var is_carpet: bool = "persian malayer rug" in p_path
 		# Jangan ubah struktur dinding/karakter/partikel/efek/portal/hint/parkourrocks, KECUALI karpet Persia agar warna merahnya tidak neon
-		if not is_carpet and ("chapter 1 kosong" in p_path or "char no light" in p_path or "dustparticles" in p_path or "timestop" in p_path or "glowingplatforms" in p_path or "parkourrocks" in p_path or "portal" in p_path or "hint" in p_path or "ghost" in p_path):
+		if not is_carpet and ("chapter 1 kosong" in p_path or "char no light" in p_path or "dustparticles" in p_path or "timestop" in p_path or "glowingplatforms" in p_path or "parkourrocks" in p_path or "portal" in p_path or "hint" in p_path or "ghost" in p_path or "flame" in p_path or "clue" in p_path or "candle" in p_path):
 			continue
 
 		# Deteksi apakah node ini merupakan bagian dari mainan / item interaktif

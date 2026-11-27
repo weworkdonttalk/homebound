@@ -10,12 +10,14 @@ extends CharacterBody3D
 # MOVEMENT CONSTANTS (Proporsional untuk Karakter Scale 2.2)
 # =====================================
 
-const SPEED = 4.2
-const RUN_SPEED = 7.2
-const CROUCH_SPEED = 2.0
-const PULL_SPEED = 2.2
-const JUMP_VELOCITY = 7.6
+const SPEED = 2.2
+const RUN_SPEED = 5.0
+const CROUCH_SPEED = 1.2
+const PULL_SPEED = 2.0
+const JUMP_VELOCITY = 7.2
 const TURN_SPEED = 18.0
+const WALK_ANIM_REF_SPEED = 4.2
+const RUN_ANIM_REF_SPEED = 7.2
 
 const ACCELERATION = 28.0
 const DECELERATION = 36.0
@@ -26,6 +28,7 @@ const JUMP_CUT_MULT = 0.5
 
 const COYOTE_TIME = 0.12
 const JUMP_BUFFER_TIME = 0.12
+const JUMP_COOLDOWN = 0.25
 const DEPTH_RATIO = 0.85 # Sedikit redam sumbu Z untuk rasa kedalaman 2.5D presisi
 
 # =====================================
@@ -44,12 +47,12 @@ const WALL_STICK_SPEED = 2.2
 const WALL_STRAFE_SPEED = 4.5
 
 const WALL_JUMP_PUSH = 6.0
-const WALL_JUMP_UP = 7.0
 const WALL_JUMP_LOCK = 0.45
 
 const MANTLE_DURATION = 0.45
 const MANTLE_DISTANCE = 1.2
 const MANTLE_ARC = 0.6
+
 
 const JARAK_TEMPEL_TANGAN = 0.65
 const RADIUS_PICKUP = 2.4
@@ -58,6 +61,15 @@ const RADIUS_PICKUP = 2.4
 # NODE REFERENCES & EXPORTS
 # =====================================
 
+@export_group("Movement Tuning")
+@export var walk_speed: float = SPEED
+@export var run_speed: float = RUN_SPEED
+@export var crouch_speed: float = CROUCH_SPEED
+@export var jump_velocity: float = JUMP_VELOCITY
+@export var walk_anim_reference_speed: float = WALK_ANIM_REF_SPEED
+@export var run_anim_reference_speed: float = RUN_ANIM_REF_SPEED
+
+@export_group("References")
 @export var anim_player: AnimationPlayer = null
 @export var visual_node: Node3D = null
 @export var visual_scale := Vector3(2.2, 2.2, 2.2)
@@ -95,6 +107,8 @@ var sedang_mantle := false
 
 var coyote_timer := 0.0
 var jump_buffer_timer := 0.0
+var jump_cooldown_timer := 0.0
+var has_jumped := false
 
 var tinggi_berdiri := 1.8
 var tinggi_jongkok := 0.9
@@ -112,16 +126,34 @@ var aksi_turun := ""
 var mantle_start := Vector3.ZERO
 var mantle_target := Vector3.ZERO
 var mantle_timer := 0.0
-
 var input_enabled: bool = true
 var is_3d_mode: bool = false
 var active_3d_camera: Camera3D = null
+var _last_input_dir: Vector2 = Vector2.ZERO
+var _use_latched_basis: bool = false
+var _latched_basis_forward: Vector3 = Vector3.FORWARD
+var _latched_basis_right: Vector3 = Vector3.RIGHT
+var _was_in_3d_mode: bool = false
 
 func enter_3d_mode(cam: Camera3D) -> void:
+	if not is_3d_mode and _last_input_dir.length() > 0.1:
+		# Kunci sumbu 2.5D sementara agar pemain tidak berbelok mendadak saat kamera berputar
+		_latched_basis_forward = Vector3(0.0, 0.0, -1.0)
+		_latched_basis_right = Vector3(1.0, 0.0, 0.0)
+		_use_latched_basis = true
 	is_3d_mode = true
 	active_3d_camera = cam
 
 func exit_3d_mode() -> void:
+	if is_3d_mode and _last_input_dir.length() > 0.1 and is_instance_valid(active_3d_camera):
+		var fwd := -active_3d_camera.global_transform.basis.z
+		fwd.y = 0.0
+		var rgt := active_3d_camera.global_transform.basis.x
+		rgt.y = 0.0
+		if fwd.length_squared() > 0.001 and rgt.length_squared() > 0.001:
+			_latched_basis_forward = fwd.normalized()
+			_latched_basis_right = rgt.normalized()
+			_use_latched_basis = true
 	is_3d_mode = false
 	active_3d_camera = null
 
@@ -130,8 +162,12 @@ func set_input_enabled(enabled: bool) -> void:
 	if not enabled:
 		velocity.x = 0.0
 		velocity.z = 0.0
-		if anim_player and anim_player.has_animation("idle"):
-			anim_player.play("idle")
+		_use_latched_basis = false
+		if anim_player:
+			if anim_player.has_animation("Idle"):
+				anim_player.play("Idle", 0.15)
+			elif anim_player.has_animation("idle"):
+				anim_player.play("idle", 0.15)
 
 
 
@@ -750,12 +786,14 @@ func mulai_mantle() -> void:
 	velocity = Vector3.ZERO
 
 
+
 func proses_mantle(delta: float) -> void:
 	mantle_timer += delta
 	var progress := clampf(mantle_timer / MANTLE_DURATION, 0.0, 1.0)
 	var posisi_baru := mantle_start.lerp(mantle_target, progress)
 	posisi_baru.y += sin(progress * PI) * MANTLE_ARC
 	global_position = posisi_baru
+
 
 	if progress >= 1.0:
 		global_position = mantle_target
@@ -780,9 +818,11 @@ func _physics_process(delta: float) -> void:
 		return
 
 	wall_lock_timer = maxf(wall_lock_timer - delta, 0.0)
+	jump_cooldown_timer = maxf(jump_cooldown_timer - delta, 0.0)
 
-	# 1. Coyote Time & Jump Buffer
-	if is_on_floor():
+	# 1. Coyote Time & Jump Buffer (strictly single-jump: never re-arm while rising or inside cooldown)
+	if is_on_floor() and velocity.y <= 0.05 and jump_cooldown_timer <= 0.0:
+		has_jumped = false
 		coyote_timer = COYOTE_TIME
 	else:
 		coyote_timer = maxf(coyote_timer - delta, 0.0)
@@ -792,12 +832,14 @@ func _physics_process(delta: float) -> void:
 	else:
 		jump_buffer_timer = maxf(jump_buffer_timer - delta, 0.0)
 
-	# 2. Toggle Lari / Tahan Lari
-	if Input.is_action_just_pressed("toogle-lari"):
-		toggle_lari_state = not toggle_lari_state
-
-	var tahan_lari := Input.is_action_pressed("toogle-lari")
-	sedang_lari = (tahan_lari or toggle_lari_state) and not sedang_jongkok and objek_ditarik == null
+	# 2. Lari: tahan Shift untuk sprint, atau tap Q untuk toggle lari
+	if Input.is_key_pressed(KEY_SHIFT):
+		toggle_lari_state = false
+		sedang_lari = not sedang_jongkok and objek_ditarik == null
+	else:
+		if Input.is_action_just_pressed("toogle-lari"):
+			toggle_lari_state = not toggle_lari_state
+		sedang_lari = toggle_lari_state and not sedang_jongkok and objek_ditarik == null
 
 	# 3. Mantle Handle
 	if sedang_mantle:
@@ -862,13 +904,18 @@ func _physics_process(delta: float) -> void:
 	var ada_tembok := (ray_aktif != null and wall_lock_timer <= 0.0)
 
 	if ada_tembok:
+		var was_climbing := sedang_memanjat
 		proses_jongkok(delta, false)
 		wall_normal = ray_aktif.get_collision_normal()
 		sedang_memanjat = true
 
-		if Input.is_action_just_pressed("ui_accept"):
-			velocity = wall_normal * WALL_JUMP_PUSH + Vector3.UP * WALL_JUMP_UP
+		# Hanya lepas mundur dari objek panjat jika sudah benar-benar menempel;
+		# tanpa dorongan vertikal tambahan agar tidak berfungsi sebagai double jump.
+		if was_climbing and Input.is_action_just_pressed("ui_accept"):
+			velocity = wall_normal * (WALL_JUMP_PUSH * 0.5)
 			sedang_memanjat = false
+			has_jumped = true
+			jump_buffer_timer = 0.0
 			wall_lock_timer = WALL_JUMP_LOCK
 			move_and_slide()
 			return
@@ -917,37 +964,26 @@ func _physics_process(delta: float) -> void:
 			grav *= FALL_GRAVITY_MULT
 		velocity += grav * delta
 
-	# Jump Execution (Coyote Time + Buffer)
-	if jump_buffer_timer > 0.0 and coyote_timer > 0.0 and not sedang_jongkok:
-		velocity.y = JUMP_VELOCITY
+	# Jump Execution (Coyote Time + Buffer, strictly once per grounded state)
+	if jump_buffer_timer > 0.0 and coyote_timer > 0.0 and not has_jumped and jump_cooldown_timer <= 0.0 and not sedang_jongkok:
+		velocity.y = jump_velocity
+		has_jumped = true
 		coyote_timer = 0.0
 		jump_buffer_timer = 0.0
+		jump_cooldown_timer = JUMP_COOLDOWN
 
 	# Variable Jump Cut
 	if Input.is_action_just_released("ui_accept") and velocity.y > 0.0:
 		velocity.y *= JUMP_CUT_MULT
 
 	# Target Speed
-	var kecepatan_sekarang := SPEED
+	var kecepatan_sekarang := walk_speed
 	if sedang_jongkok:
-		kecepatan_sekarang = CROUCH_SPEED
+		kecepatan_sekarang = crouch_speed
 	elif sedang_lari:
-		kecepatan_sekarang = RUN_SPEED
+		kecepatan_sekarang = run_speed
 
-	var move_x := input_dir.x
-	var move_z := input_dir.y * DEPTH_RATIO
-	var input_vec := Vector3(move_x, 0.0, move_z)
-
-	# Mode Kontrol 3D untuk Babak 3 Ruangan Telekinesis
-	if is_3d_mode and is_instance_valid(active_3d_camera) and active_3d_camera.current:
-		var cam_forward := -active_3d_camera.global_transform.basis.z
-		cam_forward.y = 0.0
-		cam_forward = cam_forward.normalized()
-		var cam_right := active_3d_camera.global_transform.basis.x
-		cam_right.y = 0.0
-		cam_right = cam_right.normalized()
-		# input_dir.x = kiri(-)/kanan(+), input_dir.y = maju(-)/mundur(+)
-		input_vec = (cam_right * input_dir.x) + (cam_forward * -input_dir.y)
+	var input_vec := _compute_move_vector(input_dir)
 	var move_len := input_vec.length()
 
 	if move_len > 1.0:
@@ -980,7 +1016,7 @@ func _physics_process(delta: float) -> void:
 			if collider is RigidBody3D and (collider as RigidBody3D).is_in_group("tarik"):
 				var norm := col.get_normal()
 				var push_dir := -Vector3(norm.x, 0.0, norm.z).normalized()
-				var push_force: float = (RUN_SPEED if sedang_lari else SPEED) * 55.0
+				var push_force: float = (run_speed if sedang_lari else walk_speed) * 55.0
 				(collider as RigidBody3D).apply_central_force(push_dir * push_force)
 
 	if visual_node:
@@ -1051,16 +1087,44 @@ func _update_animation_playback(_delta: float) -> void:
 				blend_duration = 0.15
 			anim_player.play(target_anim, blend_duration)
 
-	# Sinkronisasi kecepatan animasi dengan kecepatan langkah kaki sebenarnya
+	# Sinkronisasi kecepatan animasi dengan panjang langkah kaki sebenarnya agar tidak meluncur
 	if anim_player.current_animation == "Walk":
-		anim_player.speed_scale = clampf(horizontal_spd / SPEED, 0.75, 1.35)
+		anim_player.speed_scale = clampf(horizontal_spd / maxf(walk_anim_reference_speed, 0.5), 0.42, 1.30)
 	elif anim_player.current_animation == "Run":
-		anim_player.speed_scale = clampf(horizontal_spd / RUN_SPEED, 0.75, 1.40)
+		anim_player.speed_scale = clampf(horizontal_spd / maxf(run_anim_reference_speed, 0.5), 0.65, 1.35)
 	elif anim_player.current_animation == "CarryWalk":
-		anim_player.speed_scale = clampf(horizontal_spd / (SPEED * 0.85), 0.75, 1.30)
+		anim_player.speed_scale = clampf(horizontal_spd / maxf(walk_speed * 0.85, 0.5), 0.75, 1.30)
 	elif anim_player.current_animation == "CrouchWalk":
-		anim_player.speed_scale = clampf(horizontal_spd / CROUCH_SPEED, 0.75, 1.30)
+		anim_player.speed_scale = clampf(horizontal_spd / maxf(crouch_speed, 0.5), 0.75, 1.30)
 	elif anim_player.current_animation in ["Climb", "ClimbUp", "ClimbDown"]:
 		anim_player.speed_scale = clampf(absf(velocity.y) / CLIMB_SPEED, 0.5, 1.2)
 	else:
 		anim_player.speed_scale = 1.0
+
+
+## Menghitung vektor gerak 2.5D atau 3D kamera-relatif dengan basis-latch agar transisi sudut kamera tidak membelokkan arah gerak mendadak.
+func _compute_move_vector(input_dir: Vector2) -> Vector3:
+	if input_dir.length() < 0.08:
+		_use_latched_basis = false
+		_last_input_dir = Vector2.ZERO
+		return Vector3.ZERO
+
+	if _use_latched_basis and _last_input_dir.length() > 0.1 and input_dir.normalized().dot(_last_input_dir.normalized()) < 0.45:
+		_use_latched_basis = false
+
+	_last_input_dir = input_dir
+
+	if _use_latched_basis:
+		return (_latched_basis_right * input_dir.x) + (_latched_basis_forward * -input_dir.y)
+
+	if is_3d_mode and is_instance_valid(active_3d_camera):
+		var cam_forward := -active_3d_camera.global_transform.basis.z
+		cam_forward.y = 0.0
+		var cam_right := active_3d_camera.global_transform.basis.x
+		cam_right.y = 0.0
+		if cam_forward.length_squared() > 0.001 and cam_right.length_squared() > 0.001:
+			cam_forward = cam_forward.normalized()
+			cam_right = cam_right.normalized()
+			return (cam_right * input_dir.x) + (cam_forward * -input_dir.y)
+
+	return Vector3(input_dir.x, 0.0, input_dir.y * DEPTH_RATIO)

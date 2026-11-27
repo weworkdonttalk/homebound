@@ -25,18 +25,28 @@ extends Node3D
 @export_group("Shifting Polish")
 @export var phase_out_grace: float = 0.35
 
+@export_group("Unstable Rock")
+@export var is_unstable: bool = false
+@export var sink_delay: float = 1.6
+@export var sink_distance: float = 11.0
+@export var reset_delay: float = 2.5
+
 signal rock_stepped(index: int, rock: ParkourRock)
 
 var _base_pos: Vector3 = Vector3.ZERO
 var _base_rot: Vector3 = Vector3.ZERO
 var _time: float = 0.0
 var _is_solid: bool = true
+var _unstable_triggered: bool = false
+var _is_sinking: bool = false
+var _shake_amp: float = 0.0
 var _meshes: Array[MeshInstance3D] = []
 var _col_shapes: Array[CollisionShape3D] = []
 var _bodies: Array[PhysicsBody3D] = []
 var _active_mats: Dictionary = {}   # MeshInstance3D -> Array[Material]
 var _ghost_mat: ShaderMaterial = null
 var _phase_tween: Tween = null
+var _unstable_tween: Tween = null
 var _sensor_area: Area3D = null
 
 
@@ -166,6 +176,60 @@ func _on_step_body_entered(body: Node3D) -> void:
 		return
 	if body.name == "Player" or body is CharacterBody3D:
 		rock_stepped.emit(rock_index, self)
+		if is_unstable and not _unstable_triggered:
+			_start_unstable_sequence()
+
+
+func _start_unstable_sequence() -> void:
+	_unstable_triggered = true
+	if _unstable_tween and _unstable_tween.is_valid():
+		_unstable_tween.kill()
+
+	_apply_unstable_warning_tint(true)
+	_unstable_tween = create_tween()
+	_unstable_tween.tween_property(self, "_shake_amp", 0.11, sink_delay).set_trans(Tween.TRANS_SINE)
+	_unstable_tween.tween_callback(func() -> void:
+		_is_sinking = true
+		_shake_amp = 0.0
+	)
+	_unstable_tween.tween_property(self, "position:y", _base_pos.y - sink_distance, 0.85).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+	_unstable_tween.tween_callback(func() -> void:
+		_set_collisions_enabled(false)
+	)
+	_unstable_tween.tween_interval(reset_delay)
+	_unstable_tween.tween_callback(func() -> void:
+		_apply_unstable_warning_tint(false)
+		if _is_solid:
+			_set_collisions_enabled(true)
+	)
+	_unstable_tween.tween_property(self, "position:y", _base_pos.y, 0.7).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+	_unstable_tween.tween_callback(func() -> void:
+		position.x = _base_pos.x
+		position.z = _base_pos.z
+		_is_sinking = false
+		_unstable_triggered = false
+	)
+
+
+func _apply_unstable_warning_tint(warn: bool) -> void:
+	if not _is_solid:
+		return
+	for mi in _meshes:
+		if not is_instance_valid(mi) or not _active_mats.has(mi):
+			continue
+		var mats: Array = _active_mats[mi]
+		for s in range(mats.size()):
+			var src := mats[s] as StandardMaterial3D
+			if src == null:
+				continue
+			if warn:
+				var wm := src.duplicate() as StandardMaterial3D
+				wm.emission_enabled = true
+				wm.emission = Color(0.95, 0.34, 0.14)
+				wm.emission_energy_multiplier = 0.42
+				mi.set_surface_override_material(s, wm)
+			else:
+				mi.set_surface_override_material(s, src)
 
 
 func get_respawn_world_position() -> Vector3:
@@ -227,7 +291,17 @@ func _apply_ghost_materials() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	if Engine.is_editor_hint() or not enable_float or float_period <= 0.0:
+	if Engine.is_editor_hint():
+		return
+
+	if _shake_amp > 0.001 and not _is_sinking:
+		position.x = _base_pos.x + randf_range(-_shake_amp, _shake_amp)
+		position.z = _base_pos.z + randf_range(-_shake_amp, _shake_amp)
+	elif position.x != _base_pos.x or position.z != _base_pos.z:
+		position.x = _base_pos.x
+		position.z = _base_pos.z
+
+	if _is_sinking or not enable_float or float_period <= 0.0:
 		return
 
 	_time += delta

@@ -26,6 +26,8 @@
 [ext_resource type="Script" uid="uid://siotgpfwdaq5" path="res://scripts/tembok_kebelah.gd" id="24_5cv3f"]
 [ext_resource type="Script" uid="uid://x72y4d5hdcyg" path="res://scripts/abcd_puzzle_manager.gd" id="26_ria18"]
 [ext_resource type="Script" uid="uid://cyam151wac6ha" path="res://scripts/puzzle_slot.gd" id="27_h6dfy"]
+[ext_resource type="Script" uid="uid://cp5owd0m6pwgr" path="res://scripts/gameplay/candle_puzzle_manager.gd" id="27_y1o37"]
+[ext_resource type="Script" uid="uid://cpqx5c0swglbj" path="res://scripts/gameplay/memory_candle.gd" id="28_q0ejf"]
 [ext_resource type="PackedScene" uid="uid://bf7pnjr4032po" path="res://assets/environment/chapter_1/persian_malayer_carpet.glb" id="31_hfxiw"]
 [ext_resource type="Script" uid="uid://ly0oqvm1cbdu" path="res://scripts/door_portal.gd" id="38_u87qk"]
 [ext_resource type="PackedScene" uid="uid://c07owbwygw67b" path="res://assets/wooden_door.glb" id="39_y1o37"]
@@ -142,16 +144,7 @@ size = Vector3(2.3869593, 0.30133438, 4.453458)
 [sub_resource type="BoxShape3D" id="BoxShape3D_4l0ox"]
 size = Vector3(0.7577, 0.6688, 0.9364)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h6dfy"]
-transparency = 1
-cull_mode = 2
-shading_mode = 0
-albedo_color = Color(0.2, 0.85, 1, 0.35)
-
-[sub_resource type="BoxMesh" id="BoxMesh_dkkwl"]
-size = Vector3(0.76, 0.67, 0.94)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5ywug"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ry84g"]
 transparency = 1
 cull_mode = 2
 shading_mode = 0
@@ -169,19 +162,16 @@ albedo_color = Color(0.2, 0.85, 1, 0.35)
 [sub_resource type="BoxMesh" id="BoxMesh_q0ejf"]
 size = Vector3(0.76, 0.67, 0.94)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_uvekm"]
-size = Vector3(1.2, 0.8, 1.2)
-
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ll0or"]
 transparency = 1
 cull_mode = 2
 shading_mode = 0
-albedo_color = Color(0.2, 0.85, 1, 0.28)
+albedo_color = Color(0.2, 0.85, 1, 0.35)
 
 [sub_resource type="BoxMesh" id="BoxMesh_k0nbe"]
 size = Vector3(0.76, 0.67, 0.94)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_nvd8q"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_uvekm"]
 size = Vector3(1.2, 0.8, 1.2)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_kwwm2"]
@@ -193,7 +183,7 @@ albedo_color = Color(0.2, 0.85, 1, 0.28)
 [sub_resource type="BoxMesh" id="BoxMesh_vulqq"]
 size = Vector3(0.76, 0.67, 0.94)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_p5tr3"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_nvd8q"]
 size = Vector3(1.2, 0.8, 1.2)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_uvekm"]
@@ -203,6 +193,18 @@ shading_mode = 0
 albedo_color = Color(0.2, 0.85, 1, 0.28)
 
 [sub_resource type="BoxMesh" id="BoxMesh_tw85o"]
+size = Vector3(0.76, 0.67, 0.94)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_p5tr3"]
+size = Vector3(1.2, 0.8, 1.2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_ul2ba"]
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(0.2, 0.85, 1, 0.28)
+
+[sub_resource type="BoxMesh" id="BoxMesh_nvd8q"]
 size = Vector3(0.76, 0.67, 0.94)
 
 [sub_resource type="Environment" id="Environment_dark"]
@@ -431,6 +433,44 @@ transform = Transform3D(14, 0, 0, 0, 1, 0, 0, 0, 13, -34, -0.99, 1.8)
 
 [node name="forgotten" type="Node3D" parent="." unique_id=984026037]
 
+[node name="Clue_ABCD_Sequence" type="Label3D" parent="forgotten" unique_id=1592138146]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35.8, 5.5, -2.2)
+modulate = Color(0.42, 0.88, 1, 0.96)
+outline_modulate = Color(0.02, 0.06, 0.12, 0.95)
+text = "URUTAN BALOK
+
+I  =  [ C ]
+II =  [ A ]
+III = [ B ]"
+font_size = 68
+
+[node name="CandleClue_1" type="Label3D" parent="forgotten" unique_id=109331981]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -54.5, 2.45, -7.5)
+billboard = 1
+modulate = Color(0.4, 0.86, 1, 0.96)
+outline_modulate = Color(0.02, 0.06, 0.14, 0.95)
+text = "III"
+font_size = 96
+outline_size = 14
+
+[node name="CandleClue_2" type="Label3D" parent="forgotten" unique_id=1388267301]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 2.45, -10.5)
+billboard = 1
+modulate = Color(0.4, 0.86, 1, 0.96)
+outline_modulate = Color(0.02, 0.06, 0.14, 0.95)
+text = "I"
+font_size = 96
+outline_size = 14
+
+[node name="CandleClue_3" type="Label3D" parent="forgotten" unique_id=1130684088]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.5, 2.45, 2)
+billboard = 1
+modulate = Color(0.4, 0.86, 1, 0.96)
+outline_modulate = Color(0.02, 0.06, 0.14, 0.95)
+text = "II"
+font_size = 96
+outline_size = 14
+
 [node name="remembered" type="Node3D" parent="." unique_id=1186491258]
 
 [node name="Sketchfab_Scene" parent="remembered" unique_id=492122379 instance=ExtResource("4_almrc")]
@@ -607,8 +647,8 @@ shape = SubResource("BoxShape3D_4l0ox")
 [node name="BlockHiddenHint" type="MeshInstance3D" parent="remembered/PushableToyBlock" unique_id=195470999]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00234, 0.3344, 0.03454)
 visible = false
-material_override = SubResource("StandardMaterial3D_h6dfy")
-mesh = SubResource("BoxMesh_dkkwl")
+material_override = SubResource("StandardMaterial3D_ry84g")
+mesh = SubResource("BoxMesh_u87qk")
 
 [node name="PushableToyBlock2" type="RigidBody3D" parent="remembered" unique_id=308020793 groups=["carryable", "climbable", "pickup", "puzzle_block"]]
 transform = Transform3D(0.8476098, 0, 0.53062004, 0, 1, 0, -0.53062004, 0, 0.8476098, -42.338333, 4.887557, -10.986582)
@@ -619,6 +659,7 @@ axis_lock_angular_z = true
 linear_damp = 4.0
 angular_damp = 8.0
 script = ExtResource("21_nkwsm")
+block_id = "B"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="remembered/PushableToyBlock2" unique_id=991352148]
 transform = Transform3D(-0.8732498, 0, 0.4872728, 0, 1, 0, -0.4872856, 0, -0.8732738, 0.00234, 0.3344, 0.03454)
@@ -627,8 +668,8 @@ shape = SubResource("BoxShape3D_4l0ox")
 [node name="BlockHiddenHint" type="MeshInstance3D" parent="remembered/PushableToyBlock2" unique_id=481864854]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00234, 0.3344, 0.03454)
 visible = false
-material_override = SubResource("StandardMaterial3D_5ywug")
-mesh = SubResource("BoxMesh_u87qk")
+material_override = SubResource("StandardMaterial3D_y1o37")
+mesh = SubResource("BoxMesh_q0ejf")
 
 [node name="PushableToyBlock3" type="RigidBody3D" parent="remembered" unique_id=1364406391 groups=["carryable", "climbable", "pickup", "puzzle_block"]]
 transform = Transform3D(0.8476098, 0, 0.53062004, 0, 1, 0, -0.53062004, 0, 0.8476098, -25.65833, 6.4888697, -15.259975)
@@ -639,6 +680,7 @@ axis_lock_angular_z = true
 linear_damp = 4.0
 angular_damp = 8.0
 script = ExtResource("21_nkwsm")
+block_id = "C"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="remembered/PushableToyBlock3" unique_id=2053062717]
 transform = Transform3D(-0.8732498, 0, 0.4872728, 0, 1, 0, -0.4872856, 0, -0.8732738, 0.00234, 0.3344, 0.03454)
@@ -647,8 +689,8 @@ shape = SubResource("BoxShape3D_4l0ox")
 [node name="BlockHiddenHint" type="MeshInstance3D" parent="remembered/PushableToyBlock3" unique_id=1169471590]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.00234, 0.3344, 0.03454)
 visible = false
-material_override = SubResource("StandardMaterial3D_y1o37")
-mesh = SubResource("BoxMesh_q0ejf")
+material_override = SubResource("StandardMaterial3D_ll0or")
+mesh = SubResource("BoxMesh_k0nbe")
 
 [node name="TembokKebelah" type="Node3D" parent="remembered" unique_id=886589715]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.06, 0, 4.658)
@@ -670,7 +712,8 @@ script = ExtResource("26_ria18")
 [node name="SlotBox_2" type="Area3D" parent="remembered/Puzzle_ABCD" unique_id=73185457]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -35.8, 0, -0.5)
 script = ExtResource("27_h6dfy")
-target_item_name = "PushableToyBlock"
+required_block_id = "A"
+slot_roman_label = "II"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="remembered/Puzzle_ABCD/SlotBox_2" unique_id=1699912610]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
@@ -679,12 +722,13 @@ shape = SubResource("BoxShape3D_uvekm")
 [node name="GhostHint" type="MeshInstance3D" parent="remembered/Puzzle_ABCD/SlotBox_2" unique_id=1073980703]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.335, 0)
 visible = false
-material_override = SubResource("StandardMaterial3D_ll0or")
-mesh = SubResource("BoxMesh_k0nbe")
+material_override = SubResource("StandardMaterial3D_kwwm2")
+mesh = SubResource("BoxMesh_vulqq")
 
 [node name="SlotBox_1" type="Area3D" parent="remembered/Puzzle_ABCD" unique_id=567706113]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -36.8, 0, -0.5)
 script = ExtResource("27_h6dfy")
+required_block_id = "C"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="remembered/Puzzle_ABCD/SlotBox_1" unique_id=310462297]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
@@ -693,12 +737,14 @@ shape = SubResource("BoxShape3D_nvd8q")
 [node name="GhostHint" type="MeshInstance3D" parent="remembered/Puzzle_ABCD/SlotBox_1" unique_id=250315695]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.335, 0)
 visible = false
-material_override = SubResource("StandardMaterial3D_kwwm2")
-mesh = SubResource("BoxMesh_vulqq")
+material_override = SubResource("StandardMaterial3D_uvekm")
+mesh = SubResource("BoxMesh_tw85o")
 
 [node name="SlotBox_3" type="Area3D" parent="remembered/Puzzle_ABCD" unique_id=631961035]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -34.8, 0, -0.5)
 script = ExtResource("27_h6dfy")
+required_block_id = "B"
+slot_roman_label = "III"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="remembered/Puzzle_ABCD/SlotBox_3" unique_id=550683218]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.4, 0)
@@ -707,8 +753,25 @@ shape = SubResource("BoxShape3D_p5tr3")
 [node name="GhostHint" type="MeshInstance3D" parent="remembered/Puzzle_ABCD/SlotBox_3" unique_id=2046543345]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.335, 0)
 visible = false
-material_override = SubResource("StandardMaterial3D_uvekm")
-mesh = SubResource("BoxMesh_tw85o")
+material_override = SubResource("StandardMaterial3D_ul2ba")
+mesh = SubResource("BoxMesh_nvd8q")
+
+[node name="CandlePuzzleManager" type="Node3D" parent="remembered" unique_id=1551203202]
+script = ExtResource("27_y1o37")
+
+[node name="MemoryCandle_1" type="Node3D" parent="remembered/CandlePuzzleManager" unique_id=1119969293]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -54.5, 0, -7.5)
+script = ExtResource("28_q0ejf")
+sequence_order = 3
+
+[node name="MemoryCandle_2" type="Node3D" parent="remembered/CandlePuzzleManager" unique_id=1035801349]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5.5, 0, -10.5)
+script = ExtResource("28_q0ejf")
+
+[node name="MemoryCandle_3" type="Node3D" parent="remembered/CandlePuzzleManager" unique_id=704895939]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.5, 0, 2)
+script = ExtResource("28_q0ejf")
+sequence_order = 2
 
 [node name="interact" type="Node3D" parent="." unique_id=1452824985]
 
@@ -905,12 +968,11 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 shape = SubResource("SphereShape3D_bear")
 disabled = true
 
-[node name="PressurePlate" type="Area3D" parent="." unique_id=936543588 node_paths=PackedStringArray("glowing_platforms", "door_portal")]
+[node name="PressurePlate" type="Area3D" parent="." unique_id=936543588 node_paths=PackedStringArray("door_portal")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.220321, 0.05, -14.81594)
 collision_layer = 0
 collision_mask = 6
 script = ExtResource("ext_plate")
-glowing_platforms = NodePath("")
 door_portal = NodePath("../DoorPortal")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="PressurePlate" unique_id=1814204397]
@@ -988,12 +1050,11 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0, 0, 0, 1)
 
-[node name="Chapter1PuzzleManager" type="Node3D" parent="." unique_id=1927156272 node_paths=PackedStringArray("player", "carry_system", "pressure_plate", "glowing_platforms", "door_portal", "target_room_marker", "fade_layer", "fade_rect", "game_camera", "world_manager")]
+[node name="Chapter1PuzzleManager" type="Node3D" parent="." unique_id=1927156272 node_paths=PackedStringArray("player", "carry_system", "pressure_plate", "door_portal", "target_room_marker", "fade_layer", "fade_rect", "game_camera", "world_manager")]
 script = ExtResource("ext_puz")
 player = NodePath("../Player")
 carry_system = NodePath("CarrySystem")
 pressure_plate = NodePath("../PressurePlate")
-glowing_platforms = NodePath("")
 door_portal = NodePath("../DoorPortal")
 target_room_marker = NodePath("../TargetRoomMarker")
 fade_layer = NodePath("../FadeCanvasLayer")
@@ -1283,6 +1344,7 @@ rock_index = 5
 float_amplitude = 0.2
 float_period = 3.0
 float_phase_offset = 1.9
+is_unstable = true
 
 [node name="StaticBody3D" type="StaticBody3D" parent="ParkourRocks/Rock_07_Remembered" unique_id=778467620]
 

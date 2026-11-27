@@ -18,18 +18,23 @@ var _quests: Array[Dictionary] = [
 		"chapter": "BAB I  /  RUMAH MASA KECIL",
 		"description": "Temukan jalan keluar dari ruangan ingatan yang terkunci. Gunakan tombol [T] untuk berpindah dimensi dan susun kembali kenangan yang terpecah.",
 		"objectives": [
-			{"text": "Kumpulkan 3 kotak mainan ke slot ABCD", "complete": false, "progress": "0/3"},
+			{"text": "Susun 3 balok mainan ke slot yang tepat", "complete": false, "progress": "0/3"},
+			{"text": "Nyalakan 3 lilin sesuai petunjuk dimensi", "complete": false, "progress": "0/3"},
 			{"text": "Bawa Teddy Bear ke pressure plate", "complete": false, "progress": ""},
 			{"text": "Seberangi batu melayang menuju puncak", "complete": false, "progress": "0/7"},
 			{"text": "Masuk ke dalam portal pintu", "complete": false, "progress": ""},
 		],
 	},
 	{
-		"title": "Balik Pintu",
-		"chapter": "BAB II  /  RUANG BARU",
-		"description": "Langkahmu menembus cahaya portal membawamu ke ruangan asing. Jelajahi setiap sudut dan temukan petunjuk berikutnya.",
+		"title": "Menara Waktu",
+		"chapter": "BAB II  /  CLOCK",
+		"description": "Gunakan [T] untuk membandingkan dua realitas, selaraskan jam-jam yang retak, hindari The Eraser, dan bekukan bandul pendulum untuk mencapai pintu cahaya.",
 		"objectives": [
-			{"text": "Jelajahi ruangan Chapter 2", "complete": false, "progress": ""},
+			{"text": "Sinkronkan 2 jam besar ke 12:00 ([T] & [E])", "complete": false, "progress": "0/2"},
+			{"text": "Susun 3 angka jam dinding yang hilang ([T] lihat kode)", "complete": false, "progress": "0/3"},
+			{"text": "Kumpulkan 3 Fragmen Waktu & hindari The Eraser (lemari [E])", "complete": false, "progress": "0/3"},
+			{"text": "Bekukan pendulum ([T]) & seberangi jurang jam", "complete": false, "progress": "0/3"},
+			{"text": "Masuk ke pintu portal di ujung jurang", "complete": false, "progress": ""},
 		],
 	},
 ]

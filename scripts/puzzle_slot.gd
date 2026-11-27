@@ -3,7 +3,7 @@ extends Area3D
 class_name PuzzleSlot
 
 ## PuzzleSlot — Slot Dudukan Puzzle Balok ABCD (Chapter 1)
-## Mendukung deteksi balok mainan (CarrySystem & dropped physics),
+## Mendukung pencocokan ketat per slot (required_block_id), penolakan salah pasang,
 ## visual ghost silhouette di Forgotten dimension ([T]),
 ## pelepasan otomatis dari tangan karakter, snapping mulus (0.25s),
 ## serta feedback sukses ketika balok terpasang.
@@ -12,9 +12,19 @@ signal slot_filled(block: Node3D)
 
 @export var target_item_name: String = ""
 @export var target_group: String = "puzzle_block"
+@export var required_block_id: String = ""
+@export var slot_roman_label: String = "I":
+	set(val):
+		slot_roman_label = val
+		if is_inside_tree():
+			_setup_floor_label()
 
 var is_filled: bool = false
 var ghost_mesh: MeshInstance3D = null
+var _floor_label: Label3D = null
+var _feedback_label: Label3D = null
+var _reject_cooldown_until: int = 0
+var _is_in_memory: bool = true
 
 func _ready() -> void:
 	add_to_group("puzzle_slot")
@@ -29,11 +39,42 @@ func _ready() -> void:
 		col_shape.shape = bs
 
 	_setup_ghost_mesh()
+	_setup_floor_label()
+	_setup_feedback_label()
 	_connect_world_dimension()
 
 	if not Engine.is_editor_hint():
 		if not is_connected("body_entered", Callable(self, "_on_body_entered")):
 			connect("body_entered", Callable(self, "_on_body_entered"))
+
+
+func _setup_floor_label() -> void:
+	_floor_label = get_node_or_null("SlotIndexLabel") as Label3D
+	if _floor_label == null:
+		_floor_label = Label3D.new()
+		_floor_label.name = "SlotIndexLabel"
+		add_child(_floor_label)
+	_floor_label.position = Vector3(0.0, 0.08, 0.85)
+	_floor_label.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
+	_floor_label.text = slot_roman_label
+	_floor_label.font_size = 72
+	_floor_label.outline_size = 10
+	_floor_label.modulate = Color(0.84, 0.78, 0.64, 0.92)
+	_floor_label.outline_modulate = Color(0.05, 0.04, 0.04, 0.95)
+
+
+func _setup_feedback_label() -> void:
+	_feedback_label = get_node_or_null("SlotFeedbackLabel") as Label3D
+	if _feedback_label == null:
+		_feedback_label = Label3D.new()
+		_feedback_label.name = "SlotFeedbackLabel"
+		add_child(_feedback_label)
+	_feedback_label.position = Vector3(0.0, 1.55, 0.0)
+	_feedback_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_feedback_label.font_size = 34
+	_feedback_label.outline_size = 8
+	_feedback_label.modulate = Color(1.0, 0.38, 0.34, 1.0)
+	_feedback_label.visible = false
 
 
 func _physics_process(_delta: float) -> void:
@@ -47,11 +88,14 @@ func _physics_process(_delta: float) -> void:
 		if "item_dipegang" in player and player.item_dipegang != null:
 			carried = player.item_dipegang
 
-		if carried and _is_valid_block(carried):
+		if carried and _is_puzzle_block_node(carried):
 			var dist_carried := global_position.distance_to(carried.global_position)
 			var dist_player := global_position.distance_to(player.global_position)
-			if dist_carried < 1.4 or dist_player < 1.6:
-				_snap_block_into_slot(carried)
+			if dist_carried < 1.35 or dist_player < 1.5:
+				if _is_valid_block(carried):
+					_snap_block_into_slot(carried)
+				else:
+					_reject_block(carried, true)
 
 
 func _setup_ghost_mesh() -> void:
@@ -95,6 +139,7 @@ func _connect_world_dimension() -> void:
 
 
 func _on_dimension_shifted(is_in_memory: bool) -> void:
+	_is_in_memory = is_in_memory
 	if ghost_mesh == null:
 		return
 	if is_filled:
@@ -104,16 +149,23 @@ func _on_dimension_shifted(is_in_memory: bool) -> void:
 	ghost_mesh.visible = not is_in_memory
 
 
-func _is_valid_block(node: Node3D) -> bool:
+func _is_puzzle_block_node(node: Node3D) -> bool:
 	if node == null:
 		return false
 	if "is_locked_in_slot" in node and node.is_locked_in_slot:
 		return false
+	return node.is_in_group("puzzle_block") or "PushableToyBlock" in node.name
+
+
+func _is_valid_block(node: Node3D) -> bool:
+	if not _is_puzzle_block_node(node):
+		return false
+	if not required_block_id.is_empty():
+		var bid := str(node.get("block_id")).to_upper() if "block_id" in node else ""
+		return bid == required_block_id.to_upper()
 	if not target_item_name.is_empty() and node.name == target_item_name:
 		return true
 	if node.is_in_group("puzzle_block") or node.is_in_group("carryable"):
-		return true
-	if "PushableToyBlock" in node.name:
 		return true
 	return false
 
@@ -122,8 +174,50 @@ func _on_body_entered(body: Node3D) -> void:
 	if is_filled:
 		return
 
-	if _is_valid_block(body):
-		_snap_block_into_slot(body)
+	if _is_puzzle_block_node(body):
+		if _is_valid_block(body):
+			_snap_block_into_slot(body)
+		else:
+			_reject_block(body, false)
+
+
+func _reject_block(body: Node3D, is_carried: bool) -> void:
+	var now := Time.get_ticks_msec()
+	if now < _reject_cooldown_until:
+		return
+	_reject_cooldown_until = now + 950
+
+	var bid := str(body.get("block_id")) if "block_id" in body else "?"
+	if _feedback_label:
+		_feedback_label.text = "Slot %s menolak Balok [%s]\n(Cek petunjuk di [T] Forgotten)" % [slot_roman_label, bid]
+		_feedback_label.visible = true
+		var ltw := create_tween()
+		ltw.tween_interval(1.6)
+		ltw.tween_callback(func() -> void:
+			if is_instance_valid(_feedback_label):
+				_feedback_label.visible = false
+		)
+
+	if ghost_mesh and ghost_mesh.material_override is StandardMaterial3D:
+		var orig_mat := ghost_mesh.material_override as StandardMaterial3D
+		var red_mat := orig_mat.duplicate() as StandardMaterial3D
+		red_mat.albedo_color = Color(0.95, 0.18, 0.18, 0.55)
+		red_mat.emission_enabled = true
+		red_mat.emission = Color(0.95, 0.15, 0.15)
+		red_mat.emission_energy_multiplier = 2.0
+		ghost_mesh.material_override = red_mat
+		ghost_mesh.visible = true
+		var gtw := create_tween()
+		gtw.tween_interval(0.55)
+		gtw.tween_callback(func() -> void:
+			if is_instance_valid(ghost_mesh):
+				ghost_mesh.material_override = orig_mat
+				ghost_mesh.visible = (not is_filled) and (not _is_in_memory)
+		)
+
+	if not is_carried and body is RigidBody3D:
+		var rb := body as RigidBody3D
+		rb.linear_velocity = Vector3(0.0, 2.2, 2.8)
 
 
 func _snap_block_into_slot(body: Node3D) -> void:

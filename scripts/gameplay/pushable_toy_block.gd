@@ -6,9 +6,14 @@ class_name PushableToyBlock
 ## Menggunakan sistem CarrySystem yang identik dengan Teddy Bear (pickup & carrying),
 ## mendukung Shifting Memory Hint ([T]), dan auto-snapping ke 3 slot tujuan puzzle.
 
-@export var block_id: String = "A"
+@export var block_id: String = "A":
+	set(val):
+		block_id = val.to_upper()
+		if is_inside_tree():
+			_setup_block_badge()
 var is_locked_in_slot: bool = false
 var hint_mesh: MeshInstance3D = null
+var _badge_label: Label3D = null
 
 func _ready() -> void:
 	# Samakan 100% dengan grup dan konfigurasi fisik TeddyBearPickup
@@ -30,7 +35,34 @@ func _ready() -> void:
 
 	_setup_visual()
 	_setup_hint_mesh()
+	_setup_block_badge()
 	_connect_world_dimension()
+
+
+func _setup_block_badge() -> void:
+	_badge_label = get_node_or_null("BlockBadgeLabel") as Label3D
+	if _badge_label == null:
+		_badge_label = Label3D.new()
+		_badge_label.name = "BlockBadgeLabel"
+		add_child(_badge_label)
+
+	_badge_label.position = Vector3(0.0, 0.95, 0.0)
+	_badge_label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	_badge_label.text = "[ %s ]" % block_id
+	_badge_label.font_size = 54
+	_badge_label.outline_size = 10
+	_badge_label.outline_modulate = Color(0.04, 0.04, 0.06, 0.95)
+	_badge_label.no_depth_test = false
+
+	match block_id:
+		"A":
+			_badge_label.modulate = Color(0.95, 0.72, 0.42, 0.95)
+		"B":
+			_badge_label.modulate = Color(0.86, 0.84, 0.78, 0.95)
+		"C":
+			_badge_label.modulate = Color(0.56, 0.80, 0.98, 0.95)
+		_:
+			_badge_label.modulate = Color(0.9, 0.9, 0.9, 0.95)
 
 
 func _setup_visual() -> void:

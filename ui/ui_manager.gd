@@ -21,11 +21,19 @@ var _pending_black_fade_in: bool = false
 
 # Chapter 1 progress tracking guards
 var _ch1_boxes_done: bool = false
+var _ch1_candles_done: bool = false
 var _ch1_teddy_carried: bool = false
 var _ch1_plate_done: bool = false
 var _ch1_stairs_started: bool = false
 var _ch1_stairs_done: bool = false
 var _ch1_portal_done: bool = false
+
+# Chapter 2 progress tracking guards
+var _ch2_clocks_done: bool = false
+var _ch2_missing_done: bool = false
+var _ch2_erased_done: bool = false
+var _ch2_pendulum_done: bool = false
+var _ch2_portal_done: bool = false
 
 
 func _ready() -> void:
@@ -152,6 +160,7 @@ func _sync_scene_ui() -> void:
 
 	if "chapter_2" in path.to_lower():
 		_quest_guide.select_quest(1, true)
+		_bind_chapter2_events(cur)
 	else:
 		_quest_guide.select_quest(0, true)
 		_bind_chapter1_events(cur)
@@ -169,11 +178,17 @@ func _clear_gameplay_ui() -> void:
 
 func _reset_ch1_flags() -> void:
 	_ch1_boxes_done = false
+	_ch1_candles_done = false
 	_ch1_teddy_carried = false
 	_ch1_plate_done = false
 	_ch1_stairs_started = false
 	_ch1_stairs_done = false
 	_ch1_portal_done = false
+	_ch2_clocks_done = false
+	_ch2_missing_done = false
+	_ch2_erased_done = false
+	_ch2_pendulum_done = false
+	_ch2_portal_done = false
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -219,6 +234,14 @@ func _bind_chapter1_events(scene_root: Node) -> void:
 			if child is Area3D and child.has_signal("slot_filled"):
 				child.connect("slot_filled", _on_ch1_slot_filled.bind(abcd))
 		_update_ch1_box_progress(abcd)
+
+	# 1b. Candle Puzzle Manager (3 lilin kenangan)
+	var candle_mgr := scene_root.find_child("CandlePuzzleManager", true, false)
+	if candle_mgr:
+		if candle_mgr.has_signal("candle_progress_updated"):
+			candle_mgr.connect("candle_progress_updated", _on_ch1_candle_progress)
+		if candle_mgr.has_signal("puzzle_completed"):
+			candle_mgr.connect("puzzle_completed", _on_ch1_candles_completed)
 
 	# 2. CarrySystem (Teddy Bear diambil)
 	var carry := scene_root.find_child("CarrySystem", true, false)
@@ -287,12 +310,31 @@ func _on_ch1_abcd_completed() -> void:
 	_quest_guide.show_objective_toast()
 
 
+func _on_ch1_candle_progress(lit_count: int, total_count: int) -> void:
+	if _ch1_candles_done or not is_instance_valid(_quest_guide):
+		return
+	_quest_guide.set_objective_progress(0, 1, "%d/%d" % [mini(lit_count, total_count), total_count])
+	if lit_count > 0:
+		_quest_guide.show_objective_toast()
+
+
+func _on_ch1_candles_completed() -> void:
+	if _ch1_candles_done or not is_instance_valid(_quest_guide):
+		return
+	_ch1_candles_done = true
+	if not _ch1_boxes_done:
+		_on_ch1_abcd_completed()
+	_quest_guide.set_objective_progress(0, 1, "3/3")
+	_quest_guide.set_objective_completed(0, 1, true)
+	_quest_guide.show_objective_toast()
+
+
 func _on_ch1_item_picked_up(item: Node) -> void:
 	if _ch1_plate_done or _ch1_teddy_carried or not is_instance_valid(_quest_guide) or item == null:
 		return
 	if item.is_in_group("teddy_bear") or "teddy" in item.name.to_lower():
 		_ch1_teddy_carried = true
-		_quest_guide.set_objective_progress(0, 1, "Bawa ke plate")
+		_quest_guide.set_objective_progress(0, 2, "Bawa ke plate")
 		_quest_guide.show_objective_toast()
 
 
@@ -302,8 +344,10 @@ func _on_ch1_plate_activated() -> void:
 	_ch1_plate_done = true
 	if not _ch1_boxes_done:
 		_on_ch1_abcd_completed()
-	_quest_guide.set_objective_progress(0, 1, "")
-	_quest_guide.set_objective_completed(0, 1, true)
+	if not _ch1_candles_done:
+		_on_ch1_candles_completed()
+	_quest_guide.set_objective_progress(0, 2, "")
+	_quest_guide.set_objective_completed(0, 2, true)
 	_quest_guide.show_objective_toast()
 
 
@@ -312,7 +356,7 @@ func _on_ch1_parkour_progress(step_index: int, total_rocks: int) -> void:
 		return
 	if not _ch1_plate_done:
 		_on_ch1_plate_activated()
-	_quest_guide.set_objective_progress(0, 2, "%d/%d" % [mini(step_index, total_rocks), total_rocks])
+	_quest_guide.set_objective_progress(0, 3, "%d/%d" % [mini(step_index, total_rocks), total_rocks])
 	if not _ch1_stairs_started:
 		_ch1_stairs_started = true
 		_quest_guide.show_objective_toast()
@@ -323,7 +367,7 @@ func _on_ch1_stair_revealed(index: int, _plat: Node) -> void:
 		return
 	if not _ch1_plate_done:
 		_on_ch1_plate_activated()
-	_quest_guide.set_objective_progress(0, 2, "%d/19" % mini(index + 1, 19))
+	_quest_guide.set_objective_progress(0, 3, "%d/19" % mini(index + 1, 19))
 	if not _ch1_stairs_started:
 		_ch1_stairs_started = true
 		_quest_guide.show_objective_toast()
@@ -335,8 +379,8 @@ func _on_ch1_all_stairs_activated() -> void:
 	_ch1_stairs_done = true
 	var void_zone := get_tree().current_scene.find_child("VoidRespawnZone", true, false) if get_tree().current_scene else null
 	var total := int(void_zone.get("_total_rocks")) if void_zone and "_total_rocks" in void_zone else 7
-	_quest_guide.set_objective_progress(0, 2, "%d/%d" % [total, total])
-	_quest_guide.set_objective_completed(0, 2, true)
+	_quest_guide.set_objective_progress(0, 3, "%d/%d" % [total, total])
+	_quest_guide.set_objective_completed(0, 3, true)
 	_quest_guide.show_objective_toast()
 
 
@@ -346,7 +390,7 @@ func _on_ch1_portal_entered() -> void:
 	_ch1_portal_done = true
 	if not _ch1_stairs_done:
 		_on_ch1_all_stairs_activated()
-	_quest_guide.set_objective_completed(0, 3, true)
+	_quest_guide.set_objective_completed(0, 4, true)
 	_quest_guide.show_objective_toast()
 
 
@@ -358,3 +402,107 @@ func _on_ch1_puzzle_step(step: int) -> void:
 			_on_ch1_all_stairs_activated()
 		4:
 			_on_ch1_portal_entered()
+
+
+func _bind_chapter2_events(scene_root: Node) -> void:
+	var mgr := scene_root.find_child("Chapter2PuzzleManager", true, false)
+	if mgr == null:
+		return
+	if mgr.has_signal("two_clocks_updated"):
+		mgr.connect("two_clocks_updated", _on_ch2_clocks_progress)
+	if mgr.has_signal("two_clocks_completed"):
+		mgr.connect("two_clocks_completed", _on_ch2_clocks_done)
+	if mgr.has_signal("missing_time_updated"):
+		mgr.connect("missing_time_updated", _on_ch2_missing_progress)
+	if mgr.has_signal("missing_time_completed"):
+		mgr.connect("missing_time_completed", _on_ch2_missing_done)
+	if mgr.has_signal("erased_progress_updated"):
+		mgr.connect("erased_progress_updated", _on_ch2_erased_progress)
+	if mgr.has_signal("erased_room_completed"):
+		mgr.connect("erased_room_completed", _on_ch2_erased_done)
+	if mgr.has_signal("pendulum_progress_updated"):
+		mgr.connect("pendulum_progress_updated", _on_ch2_pendulum_progress)
+	if mgr.has_signal("pendulum_completed"):
+		mgr.connect("pendulum_completed", _on_ch2_pendulum_done)
+	if mgr.has_signal("chapter_completed"):
+		mgr.connect("chapter_completed", _on_ch2_chapter_completed)
+
+
+func _on_ch2_clocks_progress(synced: int, total: int) -> void:
+	if _ch2_clocks_done or not is_instance_valid(_quest_guide):
+		return
+	_quest_guide.set_objective_progress(1, 0, "%d/%d" % [mini(synced, total), total])
+	if synced > 0:
+		_quest_guide.show_objective_toast()
+
+
+func _on_ch2_clocks_done() -> void:
+	if _ch2_clocks_done or not is_instance_valid(_quest_guide):
+		return
+	_ch2_clocks_done = true
+	_quest_guide.set_objective_progress(1, 0, "2/2")
+	_quest_guide.set_objective_completed(1, 0, true)
+	_quest_guide.show_objective_toast()
+
+
+func _on_ch2_missing_progress(matched: int, total: int) -> void:
+	if _ch2_missing_done or not is_instance_valid(_quest_guide):
+		return
+	_quest_guide.set_objective_progress(1, 1, "%d/%d" % [mini(matched, total), total])
+
+
+func _on_ch2_missing_done() -> void:
+	if _ch2_missing_done or not is_instance_valid(_quest_guide):
+		return
+	_ch2_missing_done = true
+	if not _ch2_clocks_done:
+		_on_ch2_clocks_done()
+	_quest_guide.set_objective_progress(1, 1, "3/3")
+	_quest_guide.set_objective_completed(1, 1, true)
+	_quest_guide.show_objective_toast()
+
+
+func _on_ch2_erased_progress(collected: int, total: int) -> void:
+	if _ch2_erased_done or not is_instance_valid(_quest_guide):
+		return
+	_quest_guide.set_objective_progress(1, 2, "%d/%d" % [mini(collected, total), total])
+	if collected > 0:
+		_quest_guide.show_objective_toast()
+
+
+func _on_ch2_erased_done() -> void:
+	if _ch2_erased_done or not is_instance_valid(_quest_guide):
+		return
+	_ch2_erased_done = true
+	if not _ch2_missing_done:
+		_on_ch2_missing_done()
+	_quest_guide.set_objective_progress(1, 2, "3/3")
+	_quest_guide.set_objective_completed(1, 2, true)
+	_quest_guide.show_objective_toast()
+
+
+func _on_ch2_pendulum_progress(step: int, total: int) -> void:
+	if _ch2_pendulum_done or not is_instance_valid(_quest_guide):
+		return
+	_quest_guide.set_objective_progress(1, 3, "%d/%d" % [mini(step, total), total])
+
+
+func _on_ch2_pendulum_done() -> void:
+	if _ch2_pendulum_done or not is_instance_valid(_quest_guide):
+		return
+	_ch2_pendulum_done = true
+	if not _ch2_erased_done:
+		_on_ch2_erased_done()
+	_quest_guide.set_objective_progress(1, 3, "3/3")
+	_quest_guide.set_objective_completed(1, 3, true)
+	_quest_guide.show_objective_toast()
+
+
+func _on_ch2_chapter_completed() -> void:
+	if _ch2_portal_done or not is_instance_valid(_quest_guide):
+		return
+	_ch2_portal_done = true
+	if not _ch2_pendulum_done:
+		_on_ch2_pendulum_done()
+	_quest_guide.set_objective_completed(1, 4, true)
+	_quest_guide.show_objective_toast()

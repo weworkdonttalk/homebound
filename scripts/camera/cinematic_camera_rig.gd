@@ -29,6 +29,8 @@ class_name CinematicCameraRig
 
 ## Posisi offset default kamera terhadap target (jarak jauh sinematik)
 @export var follow_offset: Vector3 = Vector3(0.0, 8.8, 24.5)
+## Offset alternatif saat masuk ParkourCameraZone (jika bukan Vector3.ZERO)
+@export var parkour_follow_offset: Vector3 = Vector3.ZERO
 
 @export_group("Weighted Axis Tracking")
 ## Smooth damping horizontal (responsif) — semakin besar semakin cepat mengikuti
@@ -78,6 +80,23 @@ class_name CinematicCameraRig
 ## Batas frustum kamera agar tidak pernah menembus dinding ruangan ke ruang kosong (void)
 @export var min_bounds: Vector3 = Vector3(-56.5, 8.5, 23.5)
 @export var max_bounds: Vector3 = Vector3(82.0, 16.0, 28.5)
+## Batas Z maksimum saat berada di dalam ruangan (0 = nonaktif)
+@export var indoor_max_z: float = 0.0
+## Batas Y khusus Lantai 1 vs Lantai 2 agar kamera tidak menembus pelat lantai (0 = nonaktif)
+@export var lower_floor_max_y: float = 0.0
+@export var upper_floor_min_y: float = 0.0
+
+@export_group("Parkour 3D Third-Person Chase")
+## Aktifkan kamera third-person 3D SpringArm3D + orbit mouse saat masuk ParkourCameraZone
+@export var parkour_3d_chase: bool = false
+@export var parkour_chase_pivot_height: float = 1.45
+@export var parkour_chase_spring_length: float = 5.2
+@export var parkour_chase_shoulder_offset: Vector2 = Vector2(0.6, 0.35)
+@export var parkour_chase_yaw_degrees: float = -90.0
+@export var parkour_chase_pitch_degrees: float = -10.5
+@export var parkour_chase_fov: float = 62.0
+@export var parkour_chase_mouse_sensitivity: float = 0.0028
+@export var parkour_chase_capture_mouse: bool = true
 
 @export_group("Room Divider & Wall Occlusion")
 ## Aktifkan pembatas kamera per ruangan & fade tembok tengah jika menghalangi pandangan
@@ -102,7 +121,19 @@ var _is_focusing: bool = false
 var _focus_tween: Tween = null
 var _sway_time: float = 0.0
 var _current_fov: float = 42.0
+var _current_follow_offset: Vector3 = Vector3.ZERO
 var _in_parkour_zone: bool = false
+var is_upper_floor: bool = false
+var _chase_blend: float = 0.0
+var _chase_yaw: float = -PI * 0.5
+var _chase_pitch: float = deg_to_rad(-10.5)
+var _chase_target_yaw: float = -PI * 0.5
+var _chase_target_pitch: float = deg_to_rad(-10.5)
+var _chase_target_length: float = 5.2
+var _chase_pivot: Node3D = null
+var _spring_arm: SpringArm3D = null
+var _spring_mount: Node3D = null
+var _chase_cam_target: Node3D = null
 var _look_ahead_offset: Vector3 = Vector3.ZERO
 var _has_partition_wall: bool = false
 var _partition_wall_meshes: Array[GeometryInstance3D] = []
@@ -123,11 +154,20 @@ func _ready() -> void:
 		camera.rotation_degrees = Vector3(pitch_degrees, 0.0, 0.0)
 
 	_current_fov = camera_fov
+	_current_follow_offset = follow_offset
+	_chase_target_length = parkour_chase_spring_length
+	_chase_target_yaw = deg_to_rad(parkour_chase_yaw_degrees)
+	_chase_target_pitch = deg_to_rad(parkour_chase_pitch_degrees)
+	_chase_yaw = _chase_target_yaw
+	_chase_pitch = _chase_target_pitch
 
 	if target == null:
 		target = get_node_or_null("../Player")
 	if target == null and get_parent():
 		target = get_parent().find_child("Player", true, false) as Node3D
+
+	if parkour_3d_chase:
+		_setup_chase_rig()
 
 	# Inisialisasi FastNoiseLite untuk organic sway
 	_setup_noise()
@@ -142,16 +182,70 @@ func _ready() -> void:
 	global_position = _camera_anchor
 
 
+func _exit_tree() -> void:
+	if _in_parkour_zone and parkour_3d_chase and parkour_chase_capture_mouse:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
+func _setup_chase_rig() -> void:
+	if _chase_pivot != null:
+		return
+	_chase_pivot = Node3D.new()
+	_chase_pivot.name = "ParkourChasePivot"
+	_chase_pivot.top_level = true
+	add_child(_chase_pivot)
+
+	_spring_arm = SpringArm3D.new()
+	_spring_arm.name = "ParkourSpringArm"
+	_spring_arm.spring_length = parkour_chase_spring_length
+	_spring_arm.margin = 0.25
+	_spring_arm.collision_mask = 1 # Hanya tabrak dinding/lantai world, bukan Player (layer 2)
+	var sphere := SphereShape3D.new()
+	sphere.radius = 0.25
+	_spring_arm.shape = sphere
+	_chase_pivot.add_child(_spring_arm)
+
+	_spring_mount = Node3D.new()
+	_spring_mount.name = "ParkourSpringMount"
+	_spring_arm.add_child(_spring_mount)
+
+	_chase_cam_target = Node3D.new()
+	_chase_cam_target.name = "ParkourChaseCamTarget"
+	_chase_cam_target.position = Vector3(parkour_chase_shoulder_offset.x, parkour_chase_shoulder_offset.y, 0.0)
+	_spring_mount.add_child(_chase_cam_target)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	if not (_in_parkour_zone and parkour_3d_chase):
+		return
+	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		var mm := event as InputEventMouseMotion
+		_chase_target_yaw -= mm.screen_relative.x * parkour_chase_mouse_sensitivity
+		_chase_target_pitch = clampf(
+			_chase_target_pitch - mm.screen_relative.y * parkour_chase_mouse_sensitivity,
+			deg_to_rad(-48.0),
+			deg_to_rad(25.0)
+		)
+	elif event is InputEventMouseButton and event.pressed:
+		var mb := event as InputEventMouseButton
+		if mb.button_index == MOUSE_BUTTON_WHEEL_UP:
+			_chase_target_length = clampf(_chase_target_length - 0.45, 3.6, 7.5)
+		elif mb.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			_chase_target_length = clampf(_chase_target_length + 0.45, 3.6, 7.5)
+
+
 func _cache_partition_walls() -> void:
 	_partition_wall_meshes.clear()
 	_has_partition_wall = false
 	var scene_root := get_parent()
 	if scene_root == null:
 		return
-	var plane_004 := scene_root.find_child("Plane_004", true, false)
-	if plane_004:
+	var divider := scene_root.find_child("Plane_004", true, false)
+	if divider == null:
+		divider = scene_root.get_node_or_null("pintu2")
+	if divider:
 		_has_partition_wall = true
-		for child in plane_004.find_children("*", "MeshInstance3D", true):
+		for child in divider.find_children("*", "MeshInstance3D", true):
 			if child is GeometryInstance3D:
 				_partition_wall_meshes.append(child as GeometryInstance3D)
 
@@ -187,8 +281,20 @@ func _clamp_bounds(pos: Vector3) -> Vector3:
 		else:
 			min_x = maxf(min_x, room2_min_cam_x)
 	pos.x = clampf(pos.x, min_x, max_x)
-	pos.y = clampf(pos.y, min_bounds.y, max_bounds.y)
-	pos.z = clampf(pos.z, min_bounds.z, max_bounds.z)
+
+	var min_y := min_bounds.y
+	var max_y := max_bounds.y
+	if not _in_parkour_zone:
+		if is_upper_floor and upper_floor_min_y > 0.0:
+			min_y = maxf(min_y, upper_floor_min_y)
+		elif not is_upper_floor and lower_floor_max_y > 0.0:
+			max_y = minf(max_y, lower_floor_max_y)
+	pos.y = clampf(pos.y, min_y, max_y)
+
+	var max_z := max_bounds.z
+	if indoor_max_z > 0.0 and not _in_parkour_zone:
+		max_z = minf(max_z, indoor_max_z)
+	pos.z = clampf(pos.z, min_bounds.z, max_z)
 	return pos
 
 
@@ -224,17 +330,22 @@ func _process(delta: float) -> void:
 	_sway_time += delta
 
 	# =========================================================================
-	# 1. FOV LERP — Parkour Zone zoom-out / normal
+	# 1. FOV, CHASE BLEND & 2.5D FOLLOW OFFSET (Frame-rate independent)
 	# =========================================================================
-	var target_fov := parkour_fov if _in_parkour_zone else camera_fov
-	_current_fov = lerpf(_current_fov, target_fov, clampf(fov_lerp_speed * delta, 0.0, 1.0))
+	var in_3d_chase := _in_parkour_zone and parkour_3d_chase
+	var target_fov := parkour_chase_fov if in_3d_chase else (parkour_fov if _in_parkour_zone else camera_fov)
+	var target_follow := parkour_follow_offset if (_in_parkour_zone and not in_3d_chase and parkour_follow_offset != Vector3.ZERO) else follow_offset
+
+	var blend_t := 1.0 - exp(-fov_lerp_speed * delta)
+	_current_fov = lerpf(_current_fov, target_fov, blend_t)
+	_current_follow_offset = _current_follow_offset.lerp(target_follow, blend_t)
+	_chase_blend = move_toward(_chase_blend, 1.0 if in_3d_chase else 0.0, delta * 1.35)
 
 	if camera:
 		camera.fov = _current_fov
-		camera.rotation_degrees.x = pitch_degrees
 
 	# =========================================================================
-	# 2. LOOK-AHEAD — offset halus ke arah hadap karakter
+	# 2. LOOK-AHEAD & 2.5D WEIGHTED TRACKING
 	# =========================================================================
 	var look_target := Vector3.ZERO
 	if target.has_node("body"):
@@ -242,23 +353,18 @@ func _process(delta: float) -> void:
 		var facing := body_node.global_transform.basis.z.normalized()
 		facing.y = 0.0
 		look_target = facing * look_ahead_distance
-	_look_ahead_offset = _look_ahead_offset.lerp(look_target, clampf(look_ahead_speed * delta, 0.0, 1.0))
+	_look_ahead_offset = _look_ahead_offset.lerp(look_target, 1.0 - exp(-look_ahead_speed * delta))
 
-	# =========================================================================
-	# 3. WEIGHTED AXIS TRACKING & DEADZONE
-	# =========================================================================
 	var desired_anchor := _camera_anchor
 
 	if stay_mode:
-		# Hitung selisih posisi target + look-ahead dengan anchor kamera saat ini
 		var target_x := target.global_position.x + _look_ahead_offset.x
 		var diff_x := target_x - _camera_anchor.x
-		var target_ideal_z := target.global_position.z + follow_offset.z + _look_ahead_offset.z
+		var target_ideal_z := target.global_position.z + _current_follow_offset.z + _look_ahead_offset.z
 		var diff_z := target_ideal_z - _camera_anchor.z
-		var target_ideal_y := target.global_position.y + follow_offset.y
+		var target_ideal_y := target.global_position.y + _current_follow_offset.y
 		var diff_y := target_ideal_y - _camera_anchor.y
 
-		# Hanya jika player keluar dari batas deadzone, anchor bergeser
 		if diff_x > edge_threshold_x:
 			desired_anchor.x = target_x - edge_threshold_x
 		elif diff_x < -edge_threshold_x:
@@ -275,56 +381,95 @@ func _process(delta: float) -> void:
 			desired_anchor.y = target_ideal_y + edge_threshold_y
 
 		desired_anchor = _clamp_bounds(desired_anchor)
-
-		# Weighted per-axis damping (menggantikan shift_speed_x/y/z yang seragam)
-		_camera_anchor.x = lerpf(_camera_anchor.x, desired_anchor.x, clampf(damp_horizontal * delta, 0.0, 1.0))
-		_camera_anchor.y = lerpf(_camera_anchor.y, desired_anchor.y, clampf(damp_vertical * delta, 0.0, 1.0))
-		_camera_anchor.z = lerpf(_camera_anchor.z, desired_anchor.z, clampf(damp_depth * delta, 0.0, 1.0))
+		_camera_anchor.x = lerpf(_camera_anchor.x, desired_anchor.x, 1.0 - exp(-damp_horizontal * delta))
+		_camera_anchor.y = lerpf(_camera_anchor.y, desired_anchor.y, 1.0 - exp(-damp_vertical * delta))
+		_camera_anchor.z = lerpf(_camera_anchor.z, desired_anchor.z, 1.0 - exp(-damp_depth * delta))
 	else:
-		# Mode follow langsung konvensional jika stay_mode dimatikan
-		var direct_desired := target.global_position + follow_offset + _look_ahead_offset
-		direct_desired = _clamp_bounds(direct_desired)
-		_camera_anchor.x = lerpf(_camera_anchor.x, direct_desired.x, clampf(damp_horizontal * delta, 0.0, 1.0))
-		_camera_anchor.y = lerpf(_camera_anchor.y, direct_desired.y, clampf(damp_vertical * delta, 0.0, 1.0))
-		_camera_anchor.z = lerpf(_camera_anchor.z, direct_desired.z, clampf(damp_depth * delta, 0.0, 1.0))
+		var direct_desired := _clamp_bounds(target.global_position + _current_follow_offset + _look_ahead_offset)
+		_camera_anchor.x = lerpf(_camera_anchor.x, direct_desired.x, 1.0 - exp(-damp_horizontal * delta))
+		_camera_anchor.y = lerpf(_camera_anchor.y, direct_desired.y, 1.0 - exp(-damp_vertical * delta))
+		_camera_anchor.z = lerpf(_camera_anchor.z, direct_desired.z, 1.0 - exp(-damp_depth * delta))
 
 	# =========================================================================
-	# 4. ORGANIC SWAY (FastNoiseLite — breathing micro-motion)
+	# 3. ORGANIC SWAY & PARALLAX LEAN
 	# =========================================================================
 	var sway_offset := Vector3.ZERO
 	var sway_roll := 0.0
-
 	if sway_enabled and _noise_x:
 		sway_offset.x = _noise_x.get_noise_1d(_sway_time) * sway_amount * 1.2
 		sway_offset.y = _noise_y.get_noise_1d(_sway_time) * sway_amount * 0.8
 		sway_offset.z = _noise_z.get_noise_1d(_sway_time) * sway_amount * 0.4
 		sway_roll = _noise_roll.get_noise_1d(_sway_time) * sway_roll_degrees
 
-	# =========================================================================
-	# 5. PARALLAX LEAN
-	# =========================================================================
 	var lean_offset := Vector3.ZERO
 	if parallax_lean_amount > 0.0:
 		var target_diff_x := target.global_position.x - _camera_anchor.x
 		lean_offset.x = clampf(target_diff_x * parallax_lean_amount, -1.0, 1.0)
 
-	# Terapkan posisi akhir: Anchor stabil + goyangan organik + lean
-	var final_pos := _camera_anchor + sway_offset + lean_offset
-	# Anti-Void: clamp posisi akhir juga
-	global_position = _clamp_bounds(final_pos)
+	var pos_25d := _clamp_bounds(_camera_anchor + sway_offset + lean_offset)
+	var xform_25d := Transform3D(Basis.from_euler(Vector3(deg_to_rad(pitch_degrees), 0.0, 0.0)), pos_25d)
 
+	# =========================================================================
+	# 4. THIRD-PERSON SPRINGARM3D CHASE & SMOOTH BLEND
+	# =========================================================================
+	if parkour_3d_chase and _chase_pivot != null and _spring_arm != null and _spring_mount != null and _chase_cam_target != null:
+		var pivot_goal := target.global_position + Vector3(0.0, parkour_chase_pivot_height, 0.0)
+		_chase_pivot.global_position = _chase_pivot.global_position.lerp(pivot_goal, 1.0 - exp(-14.0 * delta))
+		var rot_t := 1.0 - exp(-20.0 * delta)
+		_chase_yaw = lerp_angle(_chase_yaw, _chase_target_yaw, rot_t)
+		_chase_pitch = lerp_angle(_chase_pitch, _chase_target_pitch, rot_t)
+		_chase_pivot.rotation = Vector3(_chase_pitch, _chase_yaw, 0.0)
+		_spring_arm.spring_length = lerpf(_spring_arm.spring_length, _chase_target_length, 1.0 - exp(-10.0 * delta))
+		_chase_cam_target.position = Vector3(parkour_chase_shoulder_offset.x, parkour_chase_shoulder_offset.y, 0.0)
+
+		if _chase_blend > 0.001:
+			var smooth_b := _chase_blend * _chase_blend * (3.0 - 2.0 * _chase_blend)
+			var chase_xform := _chase_cam_target.global_transform
+			global_transform = Transform3D(
+				xform_25d.basis.orthonormalized().slerp(chase_xform.basis.orthonormalized(), smooth_b),
+				xform_25d.origin.lerp(chase_xform.origin, smooth_b)
+			)
+			if camera:
+				camera.rotation_degrees = Vector3(0.0, 0.0, sway_roll * (1.0 - smooth_b * 0.6))
+			return
+
+	global_transform = Transform3D(Basis.IDENTITY, pos_25d)
 	if camera:
-		camera.rotation_degrees.z = sway_roll
+		camera.rotation_degrees = Vector3(pitch_degrees, 0.0, sway_roll)
 
 
 # =========================================================================
 # PARKOUR ZONE — dipanggil oleh ParkourCameraZone (Area3D)
 # =========================================================================
+func set_upper_floor(upper: bool) -> void:
+	is_upper_floor = upper
+
+
 func enter_parkour_zone() -> void:
 	_in_parkour_zone = true
+	if parkour_3d_chase:
+		_setup_chase_rig()
+		_chase_target_yaw = deg_to_rad(parkour_chase_yaw_degrees)
+		_chase_target_pitch = deg_to_rad(parkour_chase_pitch_degrees)
+		_chase_yaw = _chase_target_yaw
+		_chase_pitch = _chase_target_pitch
+		_chase_target_length = parkour_chase_spring_length
+		if _chase_pivot and target:
+			_chase_pivot.global_position = target.global_position + Vector3(0.0, parkour_chase_pivot_height, 0.0)
+			_chase_pivot.rotation = Vector3(_chase_pitch, _chase_yaw, 0.0)
+		if parkour_chase_capture_mouse:
+			Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+		if target and target.has_method("enter_3d_mode") and camera:
+			target.call("enter_3d_mode", camera)
+
 
 func exit_parkour_zone() -> void:
 	_in_parkour_zone = false
+	if parkour_3d_chase:
+		if parkour_chase_capture_mouse:
+			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+		if target and target.has_method("exit_3d_mode"):
+			target.call("exit_3d_mode")
 
 
 ## Kamera pan singkat saat puzzle aktif (misal melihat platform muncul atau pintu terbuka)
@@ -388,10 +533,35 @@ func snap_to_room(new_position: Vector3 = Vector3.ZERO) -> void:
 	_is_focusing = false
 
 	var target_pos := new_position if new_position != Vector3.ZERO else (target.global_position if target else global_position)
-	var snap_pos := target_pos + follow_offset
-	snap_pos = _clamp_bounds(snap_pos)
+	var in_3d_chase := _in_parkour_zone and parkour_3d_chase
+	if in_3d_chase and _chase_pivot != null and _spring_arm != null and _spring_mount != null and _chase_cam_target != null:
+		_chase_blend = 1.0
+		_current_fov = parkour_chase_fov
+		_chase_target_yaw = deg_to_rad(parkour_chase_yaw_degrees)
+		_chase_target_pitch = deg_to_rad(parkour_chase_pitch_degrees)
+		_chase_yaw = _chase_target_yaw
+		_chase_pitch = _chase_target_pitch
+		_spring_arm.spring_length = _chase_target_length
+		_chase_pivot.global_position = target_pos + Vector3(0.0, parkour_chase_pivot_height, 0.0)
+		_chase_pivot.rotation = Vector3(_chase_pitch, _chase_yaw, 0.0)
+		_spring_mount.position = Vector3(0.0, 0.0, _chase_target_length)
+		_chase_cam_target.position = Vector3(parkour_chase_shoulder_offset.x, parkour_chase_shoulder_offset.y, 0.0)
+		global_transform = _chase_cam_target.global_transform
+		if camera:
+			camera.fov = _current_fov
+			camera.rotation_degrees = Vector3.ZERO
+		return
+
+	_chase_blend = 0.0
+	var off := parkour_follow_offset if (_in_parkour_zone and parkour_follow_offset != Vector3.ZERO) else follow_offset
+	_current_follow_offset = off
+	_current_fov = parkour_fov if _in_parkour_zone else camera_fov
+	var snap_pos := _clamp_bounds(target_pos + off)
 	_camera_anchor = snap_pos
-	global_position = snap_pos
+	global_transform = Transform3D(Basis.IDENTITY, snap_pos)
+	if camera:
+		camera.fov = _current_fov
+		camera.rotation_degrees = Vector3(pitch_degrees, 0.0, 0.0)
 
 
 ## Shudder / micro-shake kamera singkat saat berpindah dimensi Remembered/Forgotten

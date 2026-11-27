@@ -60,11 +60,11 @@ func _check_puzzle_progress() -> void:
 
 	if current_filled >= required_count:
 		is_puzzle_solved = true
-		print("[ABCD Puzzle] 3/3 KOTAK LENGKAP! Membuka akses ke Teddy Bear di rak lemari!")
+		print("[ABCD Puzzle] 3/3 KOTAK LENGKAP! Memicu tantangan Segel 3 Lilin Kenangan!")
 		puzzle_completed.emit()
-		_trigger_teddy_reveal()
+		_trigger_next_puzzle_stage()
 	else:
-		print("[ABCD Puzzle] Masih butuh %d kotak lagi sebelum Teddy Bear muncul. Teddy Bear tetap terkunci." % [required_count - current_filled])
+		print("[ABCD Puzzle] Masih butuh %d kotak lagi sebelum segel berikutnya terbuka." % [required_count - current_filled])
 		_ensure_teddy_locked()
 
 
@@ -74,7 +74,11 @@ func _ensure_teddy_locked() -> void:
 		teddy.call("lock_teddy")
 
 
-func _trigger_teddy_reveal() -> void:
+func _trigger_next_puzzle_stage() -> void:
+	var candle_mgr = get_tree().root.find_child("CandlePuzzleManager", true, false)
+	if candle_mgr and candle_mgr.has_method("activate_puzzle"):
+		candle_mgr.call("activate_puzzle")
+		return
 	var teddy = get_tree().root.find_child("TeddyBearPickup", true, false)
 	if teddy and teddy.has_method("unlock_teddy"):
 		teddy.call("unlock_teddy")

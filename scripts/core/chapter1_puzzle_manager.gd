@@ -291,15 +291,18 @@ func validate_dimension_collision(active_dimension: String) -> void:
 		_ensure_collisions(inactive_node, false)
 
 func _ensure_collisions(node: Node, active: bool) -> void:
+	var is_remembered_root := (node.name.to_lower() == "remembered")
 	for child in node.get_children():
 		var c_name := child.name.to_lower()
-		var is_permanent: bool = (
-			"scene5" in c_name or "scene6" in c_name or "scene7" in c_name or
-			"scene8" in c_name or "scene9" in c_name or "scene10" in c_name or
-			"scene11" in c_name or "scene12" in c_name or "scene13" in c_name or
-			"scene14" in c_name or "scene15" in c_name or "pushabletoyblock" in c_name or
-			(child is Node3D and child.position.x < 22.0)
-		)
+		var is_permanent: bool = false
+		if is_remembered_root:
+			is_permanent = (
+				"scene5" in c_name or "scene6" in c_name or
+				"scene8" in c_name or "scene9" in c_name or "scene10" in c_name or
+				"scene11" in c_name or "scene12" in c_name or "scene13" in c_name or
+				"scene14" in c_name or "scene15" in c_name or "pushabletoyblock" in c_name or
+				"candle" in c_name or (child is Node3D and child.position.x < 22.0)
+			)
 		var should_be_active: bool = true if is_permanent else active
 
 		if child is CollisionShape3D:
