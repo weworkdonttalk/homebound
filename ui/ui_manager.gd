@@ -445,64 +445,35 @@ func _on_ch2_clocks_done() -> void:
 	_quest_guide.show_objective_toast()
 
 
-func _on_ch2_missing_progress(matched: int, total: int) -> void:
-	if _ch2_missing_done or not is_instance_valid(_quest_guide):
-		return
-	_quest_guide.set_objective_progress(1, 1, "%d/%d" % [mini(matched, total), total])
+func _on_ch2_missing_progress(_matched: int, _total: int) -> void:
+	pass
 
 
 func _on_ch2_missing_done() -> void:
-	if _ch2_missing_done or not is_instance_valid(_quest_guide):
-		return
 	_ch2_missing_done = true
-	if not _ch2_clocks_done:
-		_on_ch2_clocks_done()
-	_quest_guide.set_objective_progress(1, 1, "3/3")
-	_quest_guide.set_objective_completed(1, 1, true)
-	_quest_guide.show_objective_toast()
 
 
-func _on_ch2_erased_progress(collected: int, total: int) -> void:
-	if _ch2_erased_done or not is_instance_valid(_quest_guide):
-		return
-	_quest_guide.set_objective_progress(1, 2, "%d/%d" % [mini(collected, total), total])
-	if collected > 0:
-		_quest_guide.show_objective_toast()
+func _on_ch2_erased_progress(_collected: int, _total: int) -> void:
+	pass
 
 
 func _on_ch2_erased_done() -> void:
-	if _ch2_erased_done or not is_instance_valid(_quest_guide):
-		return
 	_ch2_erased_done = true
-	if not _ch2_missing_done:
-		_on_ch2_missing_done()
-	_quest_guide.set_objective_progress(1, 2, "3/3")
-	_quest_guide.set_objective_completed(1, 2, true)
-	_quest_guide.show_objective_toast()
 
 
-func _on_ch2_pendulum_progress(step: int, total: int) -> void:
-	if _ch2_pendulum_done or not is_instance_valid(_quest_guide):
-		return
-	_quest_guide.set_objective_progress(1, 3, "%d/%d" % [mini(step, total), total])
+func _on_ch2_pendulum_progress(_step: int, _total: int) -> void:
+	pass
 
 
 func _on_ch2_pendulum_done() -> void:
-	if _ch2_pendulum_done or not is_instance_valid(_quest_guide):
-		return
 	_ch2_pendulum_done = true
-	if not _ch2_erased_done:
-		_on_ch2_erased_done()
-	_quest_guide.set_objective_progress(1, 3, "3/3")
-	_quest_guide.set_objective_completed(1, 3, true)
-	_quest_guide.show_objective_toast()
 
 
 func _on_ch2_chapter_completed() -> void:
 	if _ch2_portal_done or not is_instance_valid(_quest_guide):
 		return
 	_ch2_portal_done = true
-	if not _ch2_pendulum_done:
-		_on_ch2_pendulum_done()
-	_quest_guide.set_objective_completed(1, 4, true)
+	if not _ch2_clocks_done:
+		_on_ch2_clocks_done()
+	_quest_guide.set_objective_completed(1, 1, true)
 	_quest_guide.show_objective_toast()

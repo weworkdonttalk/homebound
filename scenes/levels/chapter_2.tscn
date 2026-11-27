@@ -55,13 +55,7 @@
 [ext_resource type="Script" uid="uid://678rj8xwnlq2" path="res://scripts/gameplay/chapter2_puzzle_manager.gd" id="53_lqav2"]
 [ext_resource type="Script" uid="uid://dt8m616jaiww" path="res://scripts/gameplay/two_clocks_puzzle.gd" id="54_3x87c"]
 [ext_resource type="Script" uid="uid://xly6h20oj2di" path="res://scripts/gameplay/clock_dial_station.gd" id="55_rcc8y"]
-[ext_resource type="Script" uid="uid://d2p0wpuyk4tj4" path="res://scripts/gameplay/erased_room_puzzle.gd" id="56_cr1ui"]
-[ext_resource type="Script" uid="uid://cwm4kfwr0vy2m" path="res://scripts/gameplay/pendulum_puzzle_zone.gd" id="57_b0qjk"]
-[ext_resource type="Script" uid="uid://cwvhmr3oykiow" path="res://scripts/gameplay/closet_hide_spot.gd" id="57_cd4dd"]
-[ext_resource type="Script" uid="uid://c3q6heiop7n0n" path="res://scripts/gameplay/memory_fragment_pickup.gd" id="58_sjx5g"]
-[ext_resource type="Script" uid="uid://wxd3o64a4twt" path="res://scripts/ai/the_eraser_ai.gd" id="59_y8k7t"]
-[ext_resource type="Script" uid="uid://dksfuxrbxxqyf" path="res://scripts/gameplay/clock_pendulum.gd" id="61_g47qq"]
-[ext_resource type="Script" uid="uid://be34tsaldoeab" path="res://scripts/gameplay/pendulum_bridge_platform.gd" id="62_d7d62"]
+[ext_resource type="Script" uid="uid://ly0oqvm1cbdu" path="res://scripts/door_portal.gd" id="56_6cbox"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0xm2m"]
 albedo_texture = ExtResource("1_ig7tw")
@@ -225,10 +219,6 @@ size = Vector3(4.16, 0.3, 6.04)
 [sub_resource type="BoxShape3D" id="BoxShape3D_l2_8"]
 size = Vector3(5.32, 0.3, 6.04)
 
-[sub_resource type="BoxMesh" id="BoxMesh_ruangan2_atap"]
-material = SubResource("StandardMaterial3D_7mycd")
-size = Vector3(54, 0.4, 30)
-
 [sub_resource type="BoxMesh" id="BoxMesh_ruangan2_leftupper"]
 material = SubResource("StandardMaterial3D_0xm2m")
 size = Vector3(0.5, 8.2, 30)
@@ -335,7 +325,7 @@ size = Vector3(96, 4, 44)
 size = Vector3(88, 28, 34)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_stair_ascend"]
-size = Vector3(4.6, 2.2, 2.2)
+size = Vector3(3.6626954, 0.8192383, 2.2)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_stair_descend"]
 size = Vector3(3.4, 2.2, 2.2)
@@ -343,6 +333,9 @@ size = Vector3(3.4, 2.2, 2.2)
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.4
 height = 2.2
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_door_portal"]
+size = Vector3(3.2, 4.5, 2.8)
 
 [node name="Node3D" type="Node3D" unique_id=1372690782]
 script = ExtResource("1_kqdd5")
@@ -496,27 +489,27 @@ script = ExtResource("49_trimesh")
 transform = Transform3D(1.3104156, 0, 0, 0, 1.5076071, 0, 0, 0, 1, 0, 11.435, 0)
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="ruangan/tembok_upper" unique_id=1950109002]
-transform = Transform3D(6.346822, 0, 0, 0, 5.096795, 0, 0, 0, 0.14010519, 0, 0, 0)
+transform = Transform3D(6.346822, 0, 0, 0, 5.096795, 0, 0, 0, 0.14010519, 0, -0.25268698, 0)
 mesh = SubResource("BoxMesh_htemk")
 
 [node name="MeshInstance3D2" type="MeshInstance3D" parent="ruangan/tembok_upper" unique_id=1950109003]
-transform = Transform3D(6.346822, 0, 0, 0, 5.096795, 0, 0, 0, 0.14010519, 6.295372, 0, 0)
+transform = Transform3D(6.346822, 0, 0, 0, 5.096795, 0, 0, 0, 0.14010519, 6.295372, -0.16937447, 0)
 mesh = SubResource("BoxMesh_htemk")
 
 [node name="MeshInstance3D3" type="MeshInstance3D" parent="ruangan/tembok_upper" unique_id=1950109004]
-transform = Transform3D(6.346822, 0, 0, 0, 5.096795, 0, 0, 0, 0.14010519, 12.616323, 0, 0)
+transform = Transform3D(6.346822, 0, 0, 0, 5.096795, 0, 0, 0, 0.14010519, 12.616323, -0.11738682, 0)
 mesh = SubResource("BoxMesh_htemk")
 
 [node name="MeshInstance3D4" type="MeshInstance3D" parent="ruangan/tembok_upper" unique_id=1950109005]
-transform = Transform3D(6.346822, 0, 0, 0, 5.096795, 0, 0, 0, 0.14010519, 18.74637, 0, 0)
+transform = Transform3D(6.346822, 0, 0, 0, 5.096795, 0, 0, 0, 0.14010519, 18.74637, -0.20950699, 0)
 mesh = SubResource("BoxMesh_htemk")
 
 [node name="MeshInstance3D5" type="MeshInstance3D" parent="ruangan/tembok_upper" unique_id=1950109006]
-transform = Transform3D(6.346822, 0, 0, 0, 5.096795, 0, 0, 0, 0.14010519, 25.041742, 0, 0)
+transform = Transform3D(6.346822, 0, 0, 0, 5.096795, 0, 0, 0, 0.14010519, 25.041742, -0.3589177, 0)
 mesh = SubResource("BoxMesh_htemk")
 
 [node name="MeshInstance3D6" type="MeshInstance3D" parent="ruangan/tembok_upper" unique_id=1950109007]
-transform = Transform3D(6.346822, 0, 0, 0, 5.096795, 0, 0, 0, 0.14010519, 31.364105, 0, 0)
+transform = Transform3D(6.346822, 0, 0, 0, 5.096795, 0, 0, 0, 0.14010519, 31.364105, -0.38188648, 0)
 mesh = SubResource("BoxMesh_htemk")
 
 [node name="atap" type="MeshInstance3D" parent="ruangan" unique_id=1950109008]
@@ -742,10 +735,6 @@ shape = SubResource("BoxShape3D_l2_7")
 [node name="Col_L2_8" type="CollisionShape3D" parent="ruangan2/Lantai2" unique_id=1950102008]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8.931, 0, -12.344)
 shape = SubResource("BoxShape3D_l2_8")
-
-[node name="atap" type="MeshInstance3D" parent="ruangan2" unique_id=1950109010]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.5, 15.2, 0)
-mesh = SubResource("BoxMesh_ruangan2_atap")
 
 [node name="tembok_kiri_upper" type="MeshInstance3D" parent="ruangan2" unique_id=1950109011]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.2, 11.4, 0)
@@ -1506,6 +1495,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 68.66, 1, -5.8)
 script = ExtResource("50_stair")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="StairAscendZone" unique_id=1950110002]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0973587, -0.6903809, -1.9740458)
 shape = SubResource("BoxShape3D_stair_ascend")
 
 [node name="StairDescendZoneRight" type="Area3D" parent="." unique_id=1950110003]
@@ -1604,7 +1594,7 @@ script = ExtResource("53_lqav2")
 script = ExtResource("54_3x87c")
 
 [node name="ClockStationRemembered" type="Node3D" parent="TwoClocksPuzzle" unique_id=596045851]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.8, 0, 1.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.247774, 0, 0.3153515)
 script = ExtResource("55_rcc8y")
 
 [node name="ClockStationForgotten" type="Node3D" parent="TwoClocksPuzzle" unique_id=1074346217]
@@ -1613,70 +1603,40 @@ script = ExtResource("55_rcc8y")
 active_dimension = "Forgotten"
 start_hour = 9
 
-[node name="ErasedRoomPuzzle" type="Node3D" parent="." unique_id=362938943]
-script = ExtResource("56_cr1ui")
+[node name="DoorPortal" type="Area3D" parent="." unique_id=1635775709 node_paths=PackedStringArray("door_inner_glow", "interaction_prompt")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 174.4, 8.76, 4.7)
+script = ExtResource("56_6cbox")
+target_scene_path = "res://main_menu.tscn"
+trigger_distance_threshold = 2.4
+door_inner_glow = NodePath("DoorInnerGlow")
+interaction_prompt = NodePath("InteractionPrompt")
 
-[node name="ClosetHideSpot" type="Node3D" parent="ErasedRoomPuzzle" unique_id=314961819]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48.3, 6.3, 9.6)
-script = ExtResource("57_cd4dd")
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DoorPortal" unique_id=1982001001]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
+shape = SubResource("BoxShape3D_door_portal")
 
-[node name="MemoryFragment_1" type="Node3D" parent="ErasedRoomPuzzle" unique_id=1488661559]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 52.4, 7.35, -1.6)
-script = ExtResource("58_sjx5g")
+[node name="WoodenDoor" parent="DoorPortal" unique_id=1982001002 instance=ExtResource("3_1bvp3")]
 
-[node name="MemoryFragment_2" type="Node3D" parent="ErasedRoomPuzzle" unique_id=1089952822]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 49.2, 7.25, -8.8)
-script = ExtResource("58_sjx5g")
-visible_dimension = "Forgotten"
+[node name="DoorInnerGlow" type="OmniLight3D" parent="DoorPortal" unique_id=1982001003]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, -0.8)
+light_color = Color(1, 0.88, 0.62, 1)
+light_energy = 0.0
+omni_range = 10.0
 
-[node name="MemoryFragment_3" type="Node3D" parent="ErasedRoomPuzzle" unique_id=1264945668]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54.8, 7.25, 8.2)
-script = ExtResource("58_sjx5g")
+[node name="InteractionPrompt" type="Label3D" parent="DoorPortal" unique_id=1982001004]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0.4)
+billboard = 1
+modulate = Color(1, 0.94, 0.72, 1)
+outline_modulate = Color(0.03, 0.02, 0.05, 0.95)
+text = "[E] Masuk ke Cahaya"
+font_size = 36
+outline_size = 10
 
-[node name="TheEraser" type="Node3D" parent="ErasedRoomPuzzle" unique_id=206042881]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64, 6.32, 2)
-script = ExtResource("59_y8k7t")
-
-[node name="PendulumPuzzleZone" type="Node3D" parent="." unique_id=249867455]
-script = ExtResource("57_b0qjk")
-
-[node name="Pendulum_1" type="Node3D" parent="PendulumPuzzleZone" unique_id=1118435329]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 110.5, 19.6, 2)
-script = ExtResource("61_g47qq")
-
-[node name="Pendulum_2" type="Node3D" parent="PendulumPuzzleZone" unique_id=847512840]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 133, 19.6, 2)
-script = ExtResource("61_g47qq")
-swing_speed = 1.85
-phase_offset = 1.8
-
-[node name="Pendulum_3" type="Node3D" parent="PendulumPuzzleZone" unique_id=1994483970]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 158.5, 19.6, 2)
-script = ExtResource("61_g47qq")
-swing_speed = 2.05
-phase_offset = 3.1
-
-[node name="PendulumBridge_1" type="StaticBody3D" parent="PendulumPuzzleZone" unique_id=1459072009]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 115.8, 6.62, 2)
-collision_mask = 0
-script = ExtResource("62_d7d62")
-
-[node name="PendulumBridge_2" type="StaticBody3D" parent="PendulumPuzzleZone" unique_id=1855000121]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 139, 6.62, 2)
-collision_mask = 0
-script = ExtResource("62_d7d62")
-
-[node name="PendulumStep_A" type="StaticBody3D" parent="PendulumPuzzleZone" unique_id=850665292]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 164.6, 7.55, 3.5)
-collision_mask = 0
-script = ExtResource("62_d7d62")
-platform_size = Vector3(2.8, 0.3, 4.2)
-
-[node name="PendulumStep_B" type="StaticBody3D" parent="PendulumPuzzleZone" unique_id=894026713]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 166.5, 8.28, 4.4)
-collision_mask = 0
-script = ExtResource("62_d7d62")
-platform_size = Vector3(2.8, 0.3, 4.2)
+[node name="ExitBeaconLight" type="OmniLight3D" parent="DoorPortal" unique_id=1982001005]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.2, 1.4)
+light_color = Color(1, 0.84, 0.56, 1)
+light_energy = 3.2
+omni_range = 12.0
 
 [editable path="pintu/Sketchfab_Scene"]
 [editable path="pintu2/Sketchfab_Scene"]

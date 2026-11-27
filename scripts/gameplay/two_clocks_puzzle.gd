@@ -18,11 +18,6 @@ var is_solved: bool = false
 
 var _clock_rem: DialStationScript = null
 var _clock_forg: DialStationScript = null
-var _arch_label: Label3D = null
-var _orb_rem_mat: StandardMaterial3D = null
-var _orb_forg_mat: StandardMaterial3D = null
-var _bridge_rem: MeshInstance3D = null
-var _bridge_forg: MeshInstance3D = null
 
 
 func _ready() -> void:
@@ -59,61 +54,6 @@ func _setup_puzzle_nodes() -> void:
 	if not Engine.is_editor_hint() and not _clock_forg.hour_changed.is_connected(_on_clock_hour_changed):
 		_clock_forg.hour_changed.connect(_on_clock_hour_changed)
 
-	if get_node_or_null("TwoClocksSyncArch") != null:
-		return
-
-	# Panel indikator mekanisme & platform tautan di depan pintu2 (x=44.6)
-	var arch := Node3D.new()
-	arch.name = "TwoClocksSyncArch"
-	arch.position = Vector3(44.45, 3.85, 6.42)
-	add_child(arch)
-
-	_arch_label = Ch2Utils.create_prompt_label(arch, Vector3(-0.3, 0.55, 0.0), Color(1.0, 0.9, 0.72), 30)
-	_arch_label.text = "SINKRONKAN 2 JAM → 12:00"
-	_arch_label.visible = true
-
-	_orb_rem_mat = _create_status_orb(arch, "OrbRemembered", Vector3(-0.25, -0.1, -0.55), Color(0.35, 0.85, 1.0))
-	_orb_forg_mat = _create_status_orb(arch, "OrbForgotten", Vector3(-0.25, -0.1, 0.55), Color(1.0, 0.68, 0.28))
-
-	# Dua pelat mekanis di lantai menuju pintu2 yang bergeser menutup celah saat jam sinkron
-	_bridge_rem = _create_sync_plate("SyncPlateRemembered", Vector3(35.0, 0.04, 6.42), Color(0.24, 0.62, 0.74))
-	_bridge_forg = _create_sync_plate("SyncPlateForgotten", Vector3(41.5, 0.04, 6.42), Color(0.75, 0.52, 0.22))
-
-
-func _create_status_orb(parent: Node3D, node_name: String, pos: Vector3, col: Color) -> StandardMaterial3D:
-	var mi := MeshInstance3D.new()
-	mi.name = node_name
-	var sph := SphereMesh.new()
-	sph.radius = 0.22
-	sph.height = 0.44
-	mi.mesh = sph
-	mi.position = pos
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = col * 0.4
-	mat.emission_enabled = true
-	mat.emission = col
-	mat.emission_energy_multiplier = 0.45
-	mi.material_override = mat
-	parent.add_child(mi)
-	return mat
-
-
-func _create_sync_plate(node_name: String, pos: Vector3, col: Color) -> MeshInstance3D:
-	var mi := MeshInstance3D.new()
-	mi.name = node_name
-	var box := BoxMesh.new()
-	box.size = Vector3(2.8, 0.08, 2.4)
-	mi.mesh = box
-	mi.position = pos
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = col * 0.45
-	mat.emission_enabled = true
-	mat.emission = col
-	mat.emission_energy_multiplier = 0.35
-	mi.material_override = mat
-	add_child(mi)
-	return mi
-
 
 func _lock_exit_door() -> void:
 	var door := get_node_or_null(door_node_path)
@@ -121,7 +61,7 @@ func _lock_exit_door() -> void:
 		door = get_tree().current_scene.find_child("pintu2", true, false)
 	if door:
 		door.set("is_locked", true)
-		door.set("locked_hint", "[E] Terkunci — Putar kedua jam ke 12:00")
+		door.set("locked_hint", "[E] Terkunci")
 
 
 func _on_clock_hour_changed(_station: Node3D, _hour: int, _synced: bool) -> void:
@@ -134,21 +74,6 @@ func _on_clock_hour_changed(_station: Node3D, _hour: int, _synced: bool) -> void
 func _update_visual_links() -> void:
 	var rem_ok := _clock_rem != null and _clock_rem.is_synced()
 	var forg_ok := _clock_forg != null and _clock_forg.is_synced()
-
-	if _orb_rem_mat:
-		_orb_rem_mat.emission = Color(0.4, 1.0, 0.65) if rem_ok else Color(0.35, 0.85, 1.0)
-		_orb_rem_mat.emission_energy_multiplier = 2.6 if rem_ok else 0.45
-	if _orb_forg_mat:
-		_orb_forg_mat.emission = Color(0.4, 1.0, 0.65) if forg_ok else Color(1.0, 0.68, 0.28)
-		_orb_forg_mat.emission_energy_multiplier = 2.6 if forg_ok else 0.45
-
-	if _bridge_rem:
-		var target_z := 6.42 if rem_ok else 4.9
-		create_tween().tween_property(_bridge_rem, "position:z", target_z, 0.4).set_trans(Tween.TRANS_SINE)
-	if _bridge_forg:
-		var target_z2 := 6.42 if forg_ok else 7.9
-		create_tween().tween_property(_bridge_forg, "position:z", target_z2, 0.4).set_trans(Tween.TRANS_SINE)
-
 	if rem_ok and forg_ok:
 		_solve()
 
@@ -170,14 +95,112 @@ func _solve() -> void:
 		_clock_rem.lock_synced()
 	if _clock_forg:
 		_clock_forg.lock_synced()
-	if _arch_label:
-		_arch_label.text = "JAM SELARAS ✓ — PINTU TERBUKA"
-		_arch_label.modulate = Color(0.45, 1.0, 0.68)
 
-	var door := get_node_or_null(door_node_path)
+	var door := get_node_or_null(door_node_path) as Node3D
 	if door == null and get_tree() and get_tree().current_scene:
-		door = get_tree().current_scene.find_child("pintu2", true, false)
-	if door and door.has_method("unlock_and_open"):
-		door.call("unlock_and_open")
+		door = get_tree().current_scene.find_child("pintu2", true, false) as Node3D
+	if door:
+		door.set("is_locked", false)
 
 	puzzle_completed.emit()
+	_play_door_open_cutscene(door)
+
+
+func _play_door_open_cutscene(door: Node3D) -> void:
+	if door == null:
+		return
+	var viewport := get_viewport() if is_inside_tree() else null
+	var prev_cam := viewport.get_camera_3d() if viewport else null
+	if DisplayServer.get_name() == "headless" or viewport == null or prev_cam == null:
+		if door.has_method("unlock_and_open"):
+			door.call("unlock_and_open")
+		return
+
+	var player := Ch2Utils.find_player(self)
+	var scene_root := get_tree().current_scene if get_tree() else null
+	var rig := scene_root.find_child("CameraRig", true, false) as Node3D if scene_root else null
+
+	_set_player_cutscene_lock(player, true)
+	if rig and "_is_focusing" in rig:
+		rig.set("_is_focusing", true)
+
+	var door_center := Vector3(45.02, 1.85, 6.42)
+	if "_door_center_world" in door:
+		var dc: Variant = door.get("_door_center_world")
+		if dc is Vector3 and dc != Vector3.ZERO:
+			door_center = dc
+	var look_target := door_center + Vector3(0.0, 0.25, 0.0)
+
+	# Jeda singkat setelah jam ke-2 mencapai 12:00 sebelum kamera mengarah ke pintu
+	await get_tree().create_timer(0.28).timeout
+	if not is_inside_tree():
+		return
+
+	var cut_cam := Camera3D.new()
+	cut_cam.name = "TwoClocksDoorCutsceneCam"
+	cut_cam.fov = 44.0
+	add_child(cut_cam)
+	var cam_start := door_center + Vector3(-6.8, 0.95, 1.45)
+	var cam_end := door_center + Vector3(-4.5, 0.65, 0.65)
+	cut_cam.global_position = cam_start
+	cut_cam.look_at(look_target, Vector3.UP)
+	cut_cam.current = true
+
+	var reveal_light := OmniLight3D.new()
+	reveal_light.light_color = Color(1.0, 0.86, 0.62)
+	reveal_light.light_energy = 0.0
+	reveal_light.omni_range = 9.0
+	add_child(reveal_light)
+	reveal_light.global_position = door_center + Vector3(-1.4, 0.85, 0.0)
+
+	var cam_tw := create_tween().set_parallel(true)
+	cam_tw.tween_method(func(t: float) -> void:
+		if is_instance_valid(cut_cam):
+			cut_cam.global_position = cam_start.lerp(cam_end, t)
+			cut_cam.look_at(look_target, Vector3.UP)
+	, 0.0, 1.0, 1.9).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	cam_tw.tween_property(reveal_light, "light_energy", 2.2, 0.5).set_trans(Tween.TRANS_SINE)
+
+	await get_tree().create_timer(0.35).timeout
+	if not is_inside_tree():
+		return
+
+	if is_instance_valid(door):
+		door.set("open_duration", 1.25)
+		if door.has_method("unlock_and_open"):
+			door.call("unlock_and_open")
+
+	# Tunggu pintu berayun terbuka penuh + jeda singkat menyorot lorong terbuka
+	await get_tree().create_timer(1.75).timeout
+	if not is_inside_tree():
+		return
+
+	if is_instance_valid(reveal_light):
+		var fade_l := create_tween()
+		fade_l.tween_property(reveal_light, "light_energy", 0.0, 0.25)
+		await fade_l.finished
+
+	if is_instance_valid(prev_cam):
+		prev_cam.current = true
+	elif rig and "camera" in rig and rig.get("camera") is Camera3D:
+		(rig.get("camera") as Camera3D).current = true
+
+	if is_instance_valid(cut_cam):
+		cut_cam.queue_free()
+	if is_instance_valid(reveal_light):
+		reveal_light.queue_free()
+
+	if rig and "_is_focusing" in rig:
+		rig.set("_is_focusing", false)
+	_set_player_cutscene_lock(player, false)
+
+
+func _set_player_cutscene_lock(player: CharacterBody3D, locked: bool) -> void:
+	if player == null or not is_instance_valid(player):
+		return
+	if locked:
+		player.velocity = Vector3.ZERO
+	if player.has_method("set_input_enabled"):
+		player.call("set_input_enabled", not locked)
+	player.set_physics_process(not locked)
+	player.set_process_unhandled_input(not locked)

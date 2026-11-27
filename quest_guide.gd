@@ -28,13 +28,10 @@ var _quests: Array[Dictionary] = [
 	{
 		"title": "Menara Waktu",
 		"chapter": "BAB II  /  CLOCK",
-		"description": "Gunakan [T] untuk membandingkan dua realitas, selaraskan jam-jam yang retak, hindari The Eraser, dan bekukan bandul pendulum untuk mencapai pintu cahaya.",
+		"description": "Gunakan [T] untuk berpindah antara dimensi Remembered & Forgotten. Temukan jam di tiap dimensi lalu tekan [E] untuk memutar jarum jam hingga keduanya menunjuk pukul 12:00 agar pintu berikutnya terbuka.",
 		"objectives": [
-			{"text": "Sinkronkan 2 jam besar ke 12:00 ([T] & [E])", "complete": false, "progress": "0/2"},
-			{"text": "Susun 3 angka jam dinding yang hilang ([T] lihat kode)", "complete": false, "progress": "0/3"},
-			{"text": "Kumpulkan 3 Fragmen Waktu & hindari The Eraser (lemari [E])", "complete": false, "progress": "0/3"},
-			{"text": "Bekukan pendulum ([T]) & seberangi jurang jam", "complete": false, "progress": "0/3"},
-			{"text": "Masuk ke pintu portal di ujung jurang", "complete": false, "progress": ""},
+			{"text": "Sinkronkan 2 jam ke 12:00 ([T] ganti dimensi & [E] putar jam)", "complete": false, "progress": "0/2"},
+			{"text": "Naik ke lantai atas & masuk ke pintu cahaya", "complete": false, "progress": ""},
 		],
 	},
 ]

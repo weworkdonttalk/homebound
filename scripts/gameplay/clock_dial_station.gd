@@ -22,8 +22,6 @@ var is_locked_synced: bool = false
 
 var _clock_rig: Dictionary = {}
 var _glow_light: OmniLight3D = null
-var _prompt_label: Label3D = null
-var _status_label: Label3D = null
 var _visual_root: Node3D = null
 var _world: Node = null
 var _player: CharacterBody3D = null
@@ -36,11 +34,6 @@ func _ready() -> void:
 	_build_clock_rig()
 	_apply_hand_rotation(true)
 	if Engine.is_editor_hint():
-		if _status_label:
-			_status_label.visible = true
-		if _prompt_label:
-			_prompt_label.text = "[E] Putar Jam (%s)" % active_dimension
-			_prompt_label.visible = true
 		return
 	_world = Ch2Utils.find_world_manager(self)
 	_player = Ch2Utils.find_player(self)
@@ -76,17 +69,6 @@ func _build_clock_rig() -> void:
 	_glow_light.omni_range = 7.0
 	_visual_root.add_child(_glow_light)
 
-	# Label angka jam di atas dial & prompt interaksi
-	_status_label = get_node_or_null("StatusLabel") as Label3D
-	if _status_label == null:
-		_status_label = Ch2Utils.create_prompt_label(self, Vector3(0.0, 4.05, 0.35), _dim_color(), 30)
-		_status_label.name = "StatusLabel"
-	_status_label.visible = true
-	_prompt_label = get_node_or_null("InteractionPrompt") as Label3D
-	if _prompt_label == null:
-		_prompt_label = Ch2Utils.create_prompt_label(self, Vector3(0.0, 0.85, 0.9), Color(1.0, 0.94, 0.78, 1.0), 34)
-	_update_labels()
-
 
 func _dim_color() -> Color:
 	return Color(0.38, 0.88, 1.0) if active_dimension == "Remembered" else Color(1.0, 0.68, 0.30)
@@ -102,9 +84,6 @@ func _on_dimension_shifted(is_in_memory: bool) -> void:
 		_visual_root.visible = _active_in_dim
 	if _glow_light:
 		_glow_light.visible = _active_in_dim
-	if _status_label:
-		_status_label.visible = _active_in_dim
-	_update_labels()
 
 
 func _process(_delta: float) -> void:
@@ -117,9 +96,6 @@ func _process(_delta: float) -> void:
 	var dist := Vector2(_player.global_position.x - global_position.x, _player.global_position.z - global_position.z).length()
 	var same_floor := absf(_player.global_position.y - global_position.y) < 3.5
 	_player_near = same_floor and dist <= interact_range
-	if _prompt_label:
-		_prompt_label.visible = _player_near
-		_update_labels()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -138,7 +114,6 @@ func _unhandled_input(event: InputEvent) -> void:
 func advance_hour() -> void:
 	current_hour = ((current_hour - 1 + hour_step) % 12) + 1
 	_apply_hand_rotation(false)
-	_update_labels()
 	hour_changed.emit(self, current_hour, is_synced())
 
 
@@ -147,29 +122,7 @@ func lock_synced() -> void:
 	if _glow_light:
 		_glow_light.light_color = Color(0.5, 1.0, 0.7)
 		_glow_light.light_energy = 3.2
-	_update_labels()
 
 
 func _apply_hand_rotation(immediate: bool) -> void:
 	Ch2Utils.set_yellow_clock_hour(self, _clock_rig, current_hour, 0.0 if immediate else 0.35, true)
-
-
-func _update_labels() -> void:
-	var time_str := "%02d:00" % current_hour
-	var target_str := "%02d:00" % target_hour
-	if _status_label:
-		if is_locked_synced:
-			_status_label.text = "%s ✓" % time_str
-			_status_label.modulate = Color(0.5, 1.0, 0.7)
-		else:
-			_status_label.text = "%s (Target %s)" % [time_str, target_str]
-			_status_label.modulate = _dim_color()
-	if _prompt_label:
-		if is_locked_synced:
-			_prompt_label.text = "Jam Tersinkron (%s)" % time_str
-		elif not _active_in_dim:
-			_prompt_label.text = "[T] Ubah ke Dimensi %s" % active_dimension
-		elif is_synced():
-			_prompt_label.text = "[E] Putar (%s ✓ — Sinkronkan jam satunya!)" % time_str
-		else:
-			_prompt_label.text = "[E] Putar Jarum Jam (%s → %s)" % [time_str, target_str]

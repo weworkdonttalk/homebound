@@ -18,6 +18,7 @@ extends StaticBody3D
 @export var locked_hint: String = "[E] Terkunci"
 
 var is_open: bool = false
+var _stay_open: bool = false
 var _door_leaf: Node3D = null
 var _hinge: Node3D = null
 var _door_col: CollisionShape3D = null
@@ -139,19 +140,15 @@ func _process(_delta: float) -> void:
 	_player_near = vertical_ok and p_flat.distance_to(d_flat) <= interact_distance
 
 	if _prompt_label:
-		_prompt_label.visible = _player_near
-		if _player_near:
-			var now := Time.get_ticks_msec() * 0.001
-			if now < _locked_flash_until:
-				_prompt_label.text = "Terkunci..."
-			elif is_locked:
-				_prompt_label.text = locked_hint
-			else:
-				_prompt_label.text = close_hint if is_open else open_hint
+		var now := Time.get_ticks_msec() * 0.001
+		var show_locked := _player_near and (is_locked or now < _locked_flash_until)
+		_prompt_label.visible = show_locked
+		if show_locked:
+			_prompt_label.text = "Terkunci..." if now < _locked_flash_until else locked_hint
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not _player_near or _player == null:
+	if not _player_near or _player == null or _stay_open:
 		return
 	if not event.is_action_pressed("interact") or event.is_echo():
 		return
@@ -221,4 +218,7 @@ func close_door() -> void:
 
 func unlock_and_open() -> void:
 	is_locked = false
+	_stay_open = true
+	if _prompt_label:
+		_prompt_label.visible = false
 	open_door()

@@ -12,6 +12,7 @@ const Ch2Utils := preload("res://scripts/gameplay/chapter2_puzzle_manager.gd")
 signal state_changed(new_state: int)
 signal exposure_changed(ratio: float)
 signal player_caught
+signal erase_pulse_triggered(eraser_pos: Vector3)
 
 enum State { DORMANT, STALKING, HUNTING, SEARCHING, VANISHED }
 
@@ -21,6 +22,7 @@ enum State { DORMANT, STALKING, HUNTING, SEARCHING, VANISHED }
 @export var search_speed: float = 1.45
 @export var catch_distance: float = 1.25
 @export var exposure_fill_seconds: float = 6.5
+@export var erase_interval_seconds: float = 6.0
 
 var current_state: int = State.DORMANT
 var exposure: float = 0.0
@@ -35,6 +37,7 @@ var _search_timer: float = 0.0
 var _grace_timer: float = 0.0
 var _catch_cooldown: float = 0.0
 var _stuck_timer: float = 0.0
+var _erase_timer: float = 0.0
 var _last_pos: Vector3 = Vector3.ZERO
 var _warned_once: bool = false
 
@@ -108,6 +111,7 @@ func _enter_state(next_state: int) -> void:
 			_last_pos = global_position
 			_stuck_timer = 0.0
 			_grace_timer = 1.4
+			_erase_timer = erase_interval_seconds * 0.65 # Pemicu hapus pertama terjadi ~2.1s setelah chase dimulai
 			if _status_label:
 				_status_label.text = "THE ERASER MENGEJAR!"
 				_status_label.visible = true
@@ -193,6 +197,11 @@ func _process(delta: float) -> void:
 
 			_last_known_pos = _player.global_position
 			_steer_toward(_last_known_pos, hunt_speed, delta)
+
+			_erase_timer += delta
+			if _erase_timer >= erase_interval_seconds:
+				_erase_timer = 0.0
+				erase_pulse_triggered.emit(global_position)
 
 			if _grace_timer <= 0.0 and _catch_cooldown <= 0.0:
 				var dist := Vector2(_player.global_position.x - global_position.x, _player.global_position.z - global_position.z).length()

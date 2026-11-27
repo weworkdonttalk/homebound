@@ -7,10 +7,10 @@ const FragmentScript := preload("res://scripts/gameplay/memory_fragment_pickup.g
 const ClosetScript := preload("res://scripts/gameplay/closet_hide_spot.gd")
 const EraserScript := preload("res://scripts/ai/the_eraser_ai.gd")
 
-## Puzzle 3: The Erased Room + The Eraser (Zona 2 Atas — Lantai 2)
-## Pemain mengumpulkan 3 Fragmen Waktu lintas dimensi di ruangan atas sementara benda
-## perlahan memudar dan The Eraser mulai berburu bila terlalu lama di ruang terbuka.
-## Lemari (ClosetHideSpot) dapat dipakai untuk bersembunyi dengan [E].
+## Puzzle 3: The Erased Room + The Eraser (Zona 2 Bawah & Atas)
+## Jalur Utama: Kumpulkan 3 Fragmen Waktu (Orrery Emas) di Ruang Atas sebelum dihapus The Eraser.
+## Jalur Alternatif: 3 Segel Prisma Segitiga tersebar di Lantai Bawah & Atas (kebal dari penghapusan).
+## Mengumpulkan 3 total dari kombinasi kedua jalur membuka segel balkon keluar.
 
 signal fragment_progress_updated(collected: int, total: int)
 signal puzzle_completed
@@ -79,10 +79,15 @@ func _build_room_props_and_hiding() -> void:
 
 func _build_fragments() -> void:
 	_fragments.clear()
+	# Jalur Utama (Orrery Emas di Ruang Atas, dapat dihapus oleh The Eraser saat mode HUNTING)
+	# + Jalur Alternatif (Prisma Segitiga tersebar di Lantai Bawah & Atas, kebal penghapusan)
 	var specs := [
-		["MemoryFragment_1", Vector3(52.4, 7.35, -1.6), "Remembered"],
-		["MemoryFragment_2", Vector3(49.2, 7.25, -8.8), "Forgotten"],
-		["MemoryFragment_3", Vector3(54.8, 7.25, 8.2), "Remembered"],
+		["MemoryFragment_1", Vector3(52.4, 7.35, -1.6), "Remembered", "Orrery", true],
+		["MemoryFragment_2", Vector3(49.2, 7.25, -8.8), "Forgotten", "Orrery", true],
+		["MemoryFragment_3", Vector3(54.8, 7.25, 8.2), "Remembered", "Orrery", true],
+		["PrismRelic_1", Vector3(55.5, 0.95, 7.8), "Remembered", "Prism", false],
+		["PrismRelic_2", Vector3(84.5, 0.95, -2.5), "Forgotten", "Prism", false],
+		["PrismRelic_3", Vector3(83.5, 7.25, 6.2), "Remembered", "Prism", false],
 	]
 	for s: Array in specs:
 		var frag := get_node_or_null(NodePath(s[0])) as FragmentScript
@@ -91,6 +96,8 @@ func _build_fragments() -> void:
 			frag.name = s[0]
 			frag.position = s[1]
 			frag.visible_dimension = s[2]
+			frag.visual_style = s[3]
+			frag.erasable_by_monster = s[4]
 			add_child(frag)
 		if not Engine.is_editor_hint() and not frag.collected.is_connected(_on_fragment_collected):
 			frag.collected.connect(_on_fragment_collected)
@@ -131,7 +138,8 @@ func _build_exit_gate() -> void:
 	_exit_gate.add_child(sb)
 
 	_warning_label = Ch2Utils.create_prompt_label(_exit_gate, Vector3(-0.6, 0.4, 0.0), Color(1.0, 0.65, 0.60), 34)
-	_warning_label.text = "Balkon Tersegel — Kumpulkan 3 Fragmen di Ruang Atas (0/3)"
+	_warning_label.no_depth_test = false
+	_warning_label.text = "Balkon Tersegel — Kumpulkan 3 Fragmen / Prisma ▲ (0/3)"
 	_warning_label.visible = true
 
 
@@ -141,8 +149,29 @@ func _build_eraser_ai() -> void:
 		_eraser = EraserScript.new()
 		_eraser.name = "TheEraser"
 		add_child(_eraser)
-	if not Engine.is_editor_hint() and not _eraser.exposure_changed.is_connected(_on_exposure_changed):
-		_eraser.exposure_changed.connect(_on_exposure_changed)
+	if not Engine.is_editor_hint():
+		if not _eraser.exposure_changed.is_connected(_on_exposure_changed):
+			_eraser.exposure_changed.connect(_on_exposure_changed)
+		if _eraser.has_signal("erase_pulse_triggered") and not _eraser.is_connected("erase_pulse_triggered", _on_erase_pulse_triggered):
+			_eraser.connect("erase_pulse_triggered", _on_erase_pulse_triggered)
+
+
+func _on_erase_pulse_triggered(eraser_pos: Vector3) -> void:
+	if is_solved:
+		return
+	# Cari 1 Orrery terdekat yang belum diambil dan hapus oleh The Eraser
+	var nearest: FragmentScript = null
+	var best_dist := INF
+	for frag in _fragments:
+		if frag.can_be_erased():
+			var d := frag.global_position.distance_to(eraser_pos)
+			if d < best_dist:
+				best_dist = d
+				nearest = frag
+	if nearest:
+		nearest.erase_by_monster()
+		if _warning_label:
+			_warning_label.text = "Fragmen dihapus The Eraser! Cari Segel Prisma ▲ (%d/%d)" % [collected_count, _total_fragments]
 
 
 func _on_player_hide_changed(is_hiding: bool) -> void:
@@ -162,7 +191,7 @@ func _on_fragment_collected(_frag: Node3D) -> void:
 		return
 	collected_count += 1
 	if _warning_label:
-		_warning_label.text = "Balkon Tersegel — Fragmen Waktu (%d/%d)" % [collected_count, _total_fragments]
+		_warning_label.text = "Balkon Tersegel — Fragmen / Prisma ▲ (%d/%d)" % [collected_count, _total_fragments]
 	fragment_progress_updated.emit(collected_count, _total_fragments)
 	if collected_count >= _total_fragments:
 		_solve()
