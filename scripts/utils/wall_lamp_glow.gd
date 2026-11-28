@@ -70,3 +70,10 @@ func _process(delta: float) -> void:
 	_time += delta
 	var pulse := sin(_time * 3.1) * 0.55 + sin(_time * 7.9) * 0.45
 	_lamp_light.light_energy = _base_energy * (1.0 + pulse * flicker_amount)
+
+
+func _exit_tree() -> void:
+	for n in find_children("*", "MeshInstance3D", true, false):
+		var mi := n as MeshInstance3D
+		if mi and mi.material_override != null:
+			mi.material_override = null

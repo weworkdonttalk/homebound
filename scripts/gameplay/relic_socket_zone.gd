@@ -352,30 +352,7 @@ func _play_parkour_reveal_sequence(cut_cam: Camera3D, reveal_light: OmniLight3D)
 		scene_root.add_child(_reveal_lights_root)
 
 	if DisplayServer.get_name() == "headless" or cut_cam == null or not is_inside_tree():
-		for entry in _parkour_platforms:
-			var p := entry["node"] as Node3D
-			if is_instance_valid(p):
-				p.position = entry["pos"]
-				p.visible = true
-				for m_var in entry["meshes"]:
-					if is_instance_valid(m_var):
-						(m_var as MeshInstance3D).transparency = 0.0
-				for mat_var in entry["mats"]:
-					if is_instance_valid(mat_var):
-						(mat_var as StandardMaterial3D).emission_energy_multiplier = 0.58
-				_set_platform_collision_disabled(p, false)
-		for entry in _parkour_clocks:
-			var c := entry["node"] as Node3D
-			if is_instance_valid(c):
-				c.position = entry["pos"]
-				c.rotation = entry["rot"]
-				c.visible = true
-				for m_var in entry["meshes"]:
-					if is_instance_valid(m_var):
-						(m_var as MeshInstance3D).transparency = 0.0
-				for mat_var in entry["mats"]:
-					if is_instance_valid(mat_var):
-						(mat_var as StandardMaterial3D).emission_energy_multiplier = 0.95
+		_reveal_parkour_immediately()
 		return
 
 	var cam_from := cut_cam.global_position
@@ -471,3 +448,66 @@ func _play_reveal_chime(freq: float) -> void:
 			asp.queue_free()
 	)
 	asp.play()
+
+
+func _reveal_parkour_immediately() -> void:
+	_parkour_revealed = true
+	for entry in _parkour_platforms:
+		var p := entry["node"] as Node3D
+		if is_instance_valid(p):
+			p.position = entry["pos"]
+			p.visible = true
+			for m_var in entry["meshes"]:
+				if is_instance_valid(m_var):
+					(m_var as MeshInstance3D).transparency = 0.0
+			for mat_var in entry["mats"]:
+				if is_instance_valid(mat_var):
+					(mat_var as StandardMaterial3D).emission_energy_multiplier = 0.58
+			_set_platform_collision_disabled(p, false)
+	for entry in _parkour_clocks:
+		var c := entry["node"] as Node3D
+		if is_instance_valid(c):
+			c.position = entry["pos"]
+			c.rotation = entry["rot"]
+			c.visible = true
+			for m_var in entry["meshes"]:
+				if is_instance_valid(m_var):
+					(m_var as MeshInstance3D).transparency = 0.0
+			for mat_var in entry["mats"]:
+				if is_instance_valid(mat_var):
+					(mat_var as StandardMaterial3D).emission_energy_multiplier = 0.95
+
+
+func restore_delivered_relics(delivered_relics: Array[Node3D], fulfilled: bool) -> void:
+	_prepare_parkour_reveal_nodes()
+	_delivered_relics.clear()
+	_delivering_relics.clear()
+	for i in range(delivered_relics.size()):
+		var relic := delivered_relics[i]
+		if not is_instance_valid(relic):
+			continue
+		_delivered_relics.append(relic)
+		var target_pos := _get_slot_world_pos(i)
+		if relic.has_method("force_delivered_at"):
+			relic.call("force_delivered_at", target_pos)
+	delivered_count = _delivered_relics.size()
+	is_fulfilled = fulfilled or (delivered_count >= required_relic_count)
+	if _prompt_label:
+		if is_fulfilled:
+			_prompt_label.text = "Pintu Ganda Terbuka (%d/%d) ✓" % [delivered_count, required_relic_count]
+			_prompt_label.modulate = Color(0.6, 1.0, 0.78, 1.0)
+		elif delivered_count > 0:
+			_prompt_label.text = "Artefak Terpasang di Pintu (%d/%d)" % [delivered_count, required_relic_count]
+		else:
+			_prompt_label.text = "Pasang 3 Artefak Waktu (0/%d)" % required_relic_count
+		_prompt_label.visible = delivered_count > 0
+	if is_fulfilled:
+		if _beacon_light:
+			_beacon_light.light_color = Color(0.55, 1.0, 0.78)
+			_beacon_light.light_energy = 2.8
+		var door := get_node_or_null(target_door_path) as Node3D
+		if door == null and get_tree() and get_tree().current_scene:
+			door = get_tree().current_scene.find_child("TembokKebelah", true, false) as Node3D
+		if door and door.has_method("unlock_and_open"):
+			door.call("unlock_and_open")
+		_reveal_parkour_immediately()

@@ -2,6 +2,7 @@ class_name MainMenu
 extends "res://zero_gravity_float.gd"
 
 const CHAPTER_1_SCENE_PATH := "res://scenes/levels/chapter_1.tscn"
+const SaveSystem := preload("res://scripts/core/save_system.gd")
 const SETTING_PAGE_SCENE: PackedScene = preload("res://setting.tscn")
 const PAUSE_MENU_SCENE: PackedScene = preload("res://pause_menu.tscn")
 const QUEST_GUIDE_SCENE: PackedScene = preload("res://quest_guide.tscn")
@@ -89,21 +90,39 @@ func _on_new_game_requested() -> void:
 
 	# Mulai fade ke hitam menjelang karakter menghilang ke bawah
 	await get_tree().create_timer(0.45).timeout
+	if SaveSystem.has_valid_save():
+		SaveSystem.clear_save()
+	await _enter_chapter_scene(CHAPTER_1_SCENE_PATH, {}, fall_tw)
+
+
+func _enter_chapter_scene(scene_path: String, pending_save: Dictionary, fall_tw: Tween = null) -> void:
 	if has_node("/root/UIManager"):
 		var ui_mgr := get_node("/root/UIManager")
+		ui_mgr.set("_pending_load_data", pending_save)
 		var fade_tw: Tween = ui_mgr.call("fade_to_black", 0.60)
 		if fade_tw != null and fade_tw.is_valid():
 			await fade_tw.finished
-		ui_mgr.call("transition_to_scene", CHAPTER_1_SCENE_PATH)
+		ui_mgr.call("transition_to_scene", scene_path)
 	else:
-		if fall_tw.is_running():
+		if fall_tw != null and fall_tw.is_running():
 			await fall_tw.finished
-		get_tree().call_deferred("change_scene_to_file", CHAPTER_1_SCENE_PATH)
+		get_tree().call_deferred("change_scene_to_file", scene_path)
 
 
 func _on_load_game_requested() -> void:
-	# TODO: wire to a save-slot screen.
-	print("[MainMenu] Load Game requested.")
+	if _starting_game:
+		return
+	var save_data: Dictionary = SaveSystem.load_save()
+	if save_data.is_empty():
+		if ui != null and ui.has_method("show_no_save_toast"):
+			ui.call("show_no_save_toast")
+		return
+	var chapter := String(save_data.get("chapter", "chapter_1"))
+	var target_scene := "res://scenes/levels/chapter_2.tscn" if chapter == "chapter_2" else CHAPTER_1_SCENE_PATH
+	_starting_game = true
+	if ui != null:
+		ui.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	await _enter_chapter_scene(target_scene, save_data)
 
 
 func _on_settings_requested() -> void:

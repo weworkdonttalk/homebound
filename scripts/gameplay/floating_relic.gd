@@ -401,3 +401,34 @@ func deliver_to_socket(socket_world_pos: Vector3, on_arrived: Callable = Callabl
 		if on_arrived.is_valid():
 			on_arrived.call()
 	)
+
+
+func force_collected_by(player: CharacterBody3D) -> void:
+	if player == null or not is_instance_valid(player):
+		return
+	_player = player
+	state = RelicState.COLLECTED
+	_player_in_pickup_zone = false
+	_set_player_registered(false)
+	if _pickup_zone:
+		_pickup_zone.set_deferred("monitoring", false)
+	if player.has_method("add_floating_relic"):
+		player.call("add_floating_relic", self)
+	visible = true
+	if _glow_light:
+		_glow_light.light_energy = base_light_energy
+
+
+func force_delivered_at(socket_world_pos: Vector3) -> void:
+	if _delivery_tween and _delivery_tween.is_valid():
+		_delivery_tween.kill()
+	if _player and is_instance_valid(_player) and _player.has_method("remove_floating_relic"):
+		_player.call("remove_floating_relic", self)
+	state = RelicState.DELIVERED
+	_pedestal_origin = socket_world_pos
+	global_position = socket_world_pos
+	visible = true
+	if _pickup_zone:
+		_pickup_zone.set_deferred("monitoring", false)
+	if _glow_light:
+		_glow_light.light_energy = base_light_energy * 1.3

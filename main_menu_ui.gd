@@ -221,6 +221,9 @@ func _on_new_game_pressed() -> void:
 
 func _on_load_game_pressed() -> void:
 	load_game_requested.emit()
+
+
+func show_no_save_toast() -> void:
 	_show_toast("No saved letters were found.")
 
 

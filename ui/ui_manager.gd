@@ -6,6 +6,7 @@ extends Node
 const MAIN_MENU_SCENE_PATH := "res://main_menu.tscn"
 const PAUSE_MENU_SCENE: PackedScene = preload("res://pause_menu.tscn")
 const QUEST_GUIDE_SCENE: PackedScene = preload("res://quest_guide.tscn")
+const SaveSystem := preload("res://scripts/core/save_system.gd")
 
 var brightness_value: float = 0.55
 
@@ -18,6 +19,8 @@ var _fade_layer: CanvasLayer = null
 var _fade_rect: ColorRect = null
 var _fade_tween: Tween = null
 var _pending_black_fade_in: bool = false
+var _pending_load_data: Dictionary = {}
+var _autosave_accum: float = 0.0
 
 # Chapter 1 progress tracking guards
 var _ch1_boxes_done: bool = false
@@ -102,11 +105,16 @@ func transition_to_scene(scene_path: String) -> void:
 	get_tree().call_deferred("change_scene_to_file", scene_path)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	var cur := get_tree().current_scene
 	var cur_id := cur.get_instance_id() if is_instance_valid(cur) else 0
 	if cur_id != _last_scene_id:
 		_sync_scene_ui()
+	elif _in_gameplay and is_instance_valid(cur):
+		_autosave_accum += delta
+		if _autosave_accum >= 20.0:
+			_autosave_accum = 0.0
+			SaveSystem.autosave_scene(cur, false)
 
 
 func _on_scene_changed() -> void:
@@ -167,6 +175,11 @@ func _sync_scene_ui() -> void:
 	else:
 		_quest_guide.select_quest(0, true)
 		_bind_chapter1_events(cur)
+
+	var pending := _pending_load_data
+	_pending_load_data = {}
+	_autosave_accum = 0.0
+	call_deferred("_apply_or_init_autosave", cur, pending)
 
 
 func _clear_gameplay_ui() -> void:
@@ -587,3 +600,39 @@ func _on_ch2_chapter_completed() -> void:
 		_on_ch2_relic_delivered()
 	_quest_guide.set_objective_completed(1, 3, true)
 	_quest_guide.show_objective_toast()
+
+
+func _apply_or_init_autosave(scene_root: Node, pending: Dictionary) -> void:
+	if not is_instance_valid(scene_root) or not scene_root.is_inside_tree():
+		return
+	SaveSystem.setup_chapter_autosave(scene_root, pending, self)
+
+
+func _sync_restored_ch1_quest() -> void:
+	if not is_instance_valid(_quest_guide):
+		return
+	if _ch1_boxes_done:
+		_quest_guide.set_objective_progress(0, 0, "3/3")
+		_quest_guide.set_objective_completed(0, 0, true)
+	if _ch1_candles_done:
+		_quest_guide.set_objective_progress(0, 1, "3/3")
+		_quest_guide.set_objective_completed(0, 1, true)
+	if _ch1_plate_done:
+		_quest_guide.set_objective_progress(0, 2, "")
+		_quest_guide.set_objective_completed(0, 2, true)
+	if _ch1_stairs_done:
+		_quest_guide.set_objective_completed(0, 3, true)
+
+
+func _sync_restored_ch2_quest() -> void:
+	if not is_instance_valid(_quest_guide):
+		return
+	if _ch2_clocks_done:
+		_quest_guide.set_objective_progress(1, 0, "2/2")
+		_quest_guide.set_objective_completed(1, 0, true)
+	if _ch2_wall_clocks_done:
+		_quest_guide.set_objective_progress(1, 1, "2/2 — Pintu ganda Lantai 2 terbuka!")
+		_quest_guide.set_objective_completed(1, 1, true)
+	if _ch2_relic_delivered:
+		_quest_guide.set_objective_progress(1, 2, "3/3 — Pintu ganda terbuka!")
+		_quest_guide.set_objective_completed(1, 2, true)

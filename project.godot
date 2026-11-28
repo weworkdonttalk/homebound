@@ -8,6 +8,9 @@
 
 config_version=5
 
+default_cell_size=0.16
+default_cell_height=0.15
+
 [application]
 
 config/name="Homebound"

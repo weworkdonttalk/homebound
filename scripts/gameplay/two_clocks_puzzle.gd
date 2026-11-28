@@ -88,6 +88,7 @@ var _inner_revealed: bool = false
 var _inner_revealing: bool = false
 var _inner_target_pos: Vector3 = Vector3.ZERO
 var _inner_target_scale: Vector3 = Vector3.ONE
+var _restored_from_save: bool = false
 
 
 func _ready() -> void:
@@ -481,6 +482,8 @@ func _ensure_clock_light(clock_node: Node3D, col: Color, energy: float) -> OmniL
 
 
 func _apply_initial_wall_clock_poses() -> void:
+	if _restored_from_save:
+		return
 	_set_wall_clock_visual_hour(1, current_hour_l1, 0.0)
 	_set_wall_clock_visual_hour(2, current_hour_l2, 0.0)
 	_sync_inner_clock_pose(0.0)
@@ -969,3 +972,81 @@ func _play_wall_clock_sfx(is_chime: bool) -> void:
 			asp.queue_free()
 	)
 	asp.play()
+
+
+func restore_state(solved: bool, rem_hour: int, forg_hour: int) -> void:
+	if _wall_mode:
+		return
+	is_solved = solved
+	if _clock_rem:
+		_clock_rem.set("current_hour", clampi(rem_hour, 1, 12))
+		if solved:
+			_clock_rem.call("lock_synced")
+		else:
+			_clock_rem.call("_apply_hand_rotation", true)
+	if _clock_forg:
+		_clock_forg.set("current_hour", clampi(forg_hour, 1, 12))
+		if solved:
+			_clock_forg.call("lock_synced")
+		else:
+			_clock_forg.call("_apply_hand_rotation", true)
+	if solved:
+		var door := get_node_or_null(door_node_path) as Node3D
+		if door == null and get_tree() and get_tree().current_scene:
+			door = get_tree().current_scene.find_child("pintu2", true, false) as Node3D
+		if door and door.has_method("unlock_and_open"):
+			door.call("unlock_and_open")
+	_emit_progress()
+
+
+func restore_wall_state(data: Dictionary) -> void:
+	if not _wall_mode:
+		return
+	_restored_from_save = true
+	target_hour = clampi(int(data.get("wall_target_hour", target_hour)), 1, 12)
+	current_hour_l1 = clampi(int(data.get("wall_hour_l1", current_hour_l1)), 1, 12)
+	current_hour_l2 = clampi(int(data.get("wall_hour_l2", current_hour_l2)), 1, 12)
+	is_solved = bool(data.get("wall_clocks_solved", false))
+	_set_wall_clock_visual_hour(1, current_hour_l1, 0.0)
+	_set_wall_clock_visual_hour(2, current_hour_l2, 0.0)
+	if is_solved:
+		if _interact_zone:
+			_interact_zone.set_deferred("monitoring", false)
+		if _interact_zone_l2:
+			_interact_zone_l2.set_deferred("monitoring", false)
+		for glow in [_l1_light, _l2_light]:
+			if glow:
+				glow.light_color = Color(0.45, 1.0, 0.65)
+				glow.light_energy = 1.8
+	inner_step = clampi(int(data.get("inner_step", inner_step)), 0, 11)
+	inner_solved = bool(data.get("inner_solved", false))
+	_inner_revealed = bool(data.get("inner_revealed", false)) or inner_solved
+	player_in_safe_room = bool(data.get("player_in_safe_room", false))
+	if _inner_revealed and _clock_inner:
+		_clock_inner.position = _inner_target_pos
+		_clock_inner.scale = _inner_target_scale
+		_clock_inner.visible = true
+		if _inner_light:
+			_inner_light.visible = true
+			_inner_light.light_color = Color(0.45, 1.0, 0.65) if inner_solved else Color(1.0, 0.78, 0.42)
+			_inner_light.light_energy = 1.8 if inner_solved else 1.2
+	else:
+		_hide_inner_clock()
+	_sync_inner_clock_pose(0.0)
+	if _inner_clock_zone:
+		_inner_clock_zone.set_deferred("monitoring", not inner_solved)
+	if _double_door:
+		var door_should_open := (player_in_safe_room and inner_solved) or (not player_in_safe_room and is_solved)
+		if door_should_open and _double_door.has_method("unlock_and_open"):
+			_double_door.call("unlock_and_open")
+		elif not door_should_open and _double_door.has_method("close_and_lock"):
+			_double_door.call("close_and_lock")
+	if _player and is_instance_valid(_player):
+		_player.set("is_in_safe_room", player_in_safe_room)
+		if player_in_safe_room and not _player.is_in_group("safe_room_player"):
+			_player.add_to_group("safe_room_player")
+		elif not player_in_safe_room and _player.is_in_group("safe_room_player"):
+			_player.remove_from_group("safe_room_player")
+	_refresh_clock_prompts()
+	_emit_wall_clock_progress()
+	inner_clock_step_changed.emit(inner_step, inner_target_step, inner_solved)
