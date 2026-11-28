@@ -135,6 +135,15 @@ var _latched_basis_forward: Vector3 = Vector3.FORWARD
 var _latched_basis_right: Vector3 = Vector3.RIGHT
 var _was_in_3d_mode: bool = false
 
+var is_hidden: bool = false
+var is_in_wardrobe: bool = false
+var is_in_safe_room: bool = false
+var custom_interact_hint: String = ""
+var current_hiding_spot: Node = null
+var nearby_hiding_spots: Array[Node] = []
+var floating_relics: Array[Node3D] = []
+var nearby_floating_relics: Array[Node3D] = []
+
 func enter_3d_mode(cam: Camera3D) -> void:
 	if not is_3d_mode and _last_input_dir.length() > 0.1:
 		# Kunci sumbu 2.5D sementara agar pemain tidak berbelok mendadak saat kamera berputar
@@ -168,6 +177,117 @@ func set_input_enabled(enabled: bool) -> void:
 				anim_player.play("Idle", 0.15)
 			elif anim_player.has_animation("idle"):
 				anim_player.play("idle", 0.15)
+
+
+func register_nearby_hiding_spot(spot: Node) -> void:
+	if spot == null or not is_instance_valid(spot):
+		return
+	if not nearby_hiding_spots.has(spot):
+		nearby_hiding_spots.append(spot)
+	update_interact_hint()
+
+
+func unregister_nearby_hiding_spot(spot: Node) -> void:
+	nearby_hiding_spots.erase(spot)
+	update_interact_hint()
+
+
+func _get_preferred_hiding_spot() -> Node:
+	if is_in_wardrobe and current_hiding_spot and is_instance_valid(current_hiding_spot):
+		return current_hiding_spot
+	for i in range(nearby_hiding_spots.size() - 1, -1, -1):
+		var s := nearby_hiding_spots[i]
+		if s == null or not is_instance_valid(s):
+			nearby_hiding_spots.remove_at(i)
+			continue
+		if s.has_method("is_wardrobe_spot") and bool(s.call("is_wardrobe_spot")):
+			return s
+	if current_hiding_spot and is_instance_valid(current_hiding_spot):
+		return current_hiding_spot
+	return nearby_hiding_spots.back() if not nearby_hiding_spots.is_empty() else null
+
+
+func set_hiding_state(hidden: bool, spot: Node = null, in_wardrobe: bool = false) -> void:
+	if not hidden and spot != null and current_hiding_spot != null and current_hiding_spot != spot:
+		return
+	is_hidden = hidden
+	is_in_wardrobe = hidden and in_wardrobe
+	current_hiding_spot = spot if hidden else null
+	if is_hidden:
+		if not is_in_group("hidden_player"):
+			add_to_group("hidden_player")
+	else:
+		if is_in_group("hidden_player"):
+			remove_from_group("hidden_player")
+	update_interact_hint()
+
+
+func force_exit_hiding() -> void:
+	if current_hiding_spot and is_instance_valid(current_hiding_spot) and current_hiding_spot.has_method("force_exit_for_hit"):
+		current_hiding_spot.call("force_exit_for_hit", self)
+	else:
+		set_hiding_state(false, null, false)
+
+
+func _ensure_relic_float_anchor() -> Marker3D:
+	var anchor := get_node_or_null("RelicFloatAnchor") as Marker3D
+	if anchor == null:
+		anchor = Marker3D.new()
+		anchor.name = "RelicFloatAnchor"
+		anchor.position = Vector3(0.55, 1.55, -0.55)
+		add_child(anchor)
+	return anchor
+
+
+func add_floating_relic(relic: Node3D) -> void:
+	if relic == null or not is_instance_valid(relic):
+		return
+	if not floating_relics.has(relic):
+		floating_relics.append(relic)
+	nearby_floating_relics.erase(relic)
+	update_interact_hint()
+
+
+func remove_floating_relic(relic: Node3D) -> void:
+	floating_relics.erase(relic)
+	update_interact_hint()
+
+
+func has_floating_relics() -> bool:
+	for i in range(floating_relics.size() - 1, -1, -1):
+		if floating_relics[i] == null or not is_instance_valid(floating_relics[i]):
+			floating_relics.remove_at(i)
+	return not floating_relics.is_empty()
+
+
+func register_nearby_floating_relic(relic: Node3D) -> void:
+	if relic == null or not is_instance_valid(relic):
+		return
+	if not nearby_floating_relics.has(relic):
+		nearby_floating_relics.append(relic)
+	update_interact_hint()
+
+
+func unregister_nearby_floating_relic(relic: Node3D) -> void:
+	nearby_floating_relics.erase(relic)
+	update_interact_hint()
+
+
+func _get_nearest_collectible_relic() -> Node3D:
+	var best: Node3D = null
+	var best_dist := INF
+	for i in range(nearby_floating_relics.size() - 1, -1, -1):
+		var r := nearby_floating_relics[i]
+		if r == null or not is_instance_valid(r):
+			nearby_floating_relics.remove_at(i)
+			continue
+		if r.has_method("can_be_collected") and not bool(r.call("can_be_collected")):
+			continue
+		var d := global_position.distance_squared_to(r.global_position)
+		if d < best_dist:
+			best_dist = d
+			best = r
+	return best
 
 
 
@@ -274,6 +394,7 @@ func _ready() -> void:
 	skala_y_body_awal = body.scale.y
 	pos_y_body_awal = body.position.y
 
+	_ensure_relic_float_anchor()
 	setup_ui_hint()
 	setup_animation_blends()
 
@@ -387,6 +508,12 @@ func update_interact_hint() -> void:
 	if hint_label == null:
 		return
 
+	if is_in_wardrobe and current_hiding_spot and is_instance_valid(current_hiding_spot):
+		if current_hiding_spot.has_method("get_interact_prompt"):
+			hint_label.text = str(current_hiding_spot.call("get_interact_prompt", self))
+			hint_label.visible = true
+			return
+
 	if item_dipegang != null:
 		hint_label.text = "[E] Letakkan"
 		hint_label.visible = true
@@ -394,6 +521,18 @@ func update_interact_hint() -> void:
 
 	if objek_ditarik != null:
 		hint_label.text = "[F/E] Lepas Pegangan"
+		hint_label.visible = true
+		return
+
+	var hide_spot := _get_preferred_hiding_spot()
+	if hide_spot and hide_spot.has_method("is_wardrobe_spot") and bool(hide_spot.call("is_wardrobe_spot")):
+		hint_label.text = str(hide_spot.call("get_interact_prompt", self))
+		hint_label.visible = true
+		return
+
+	var nearby_relic := _get_nearest_collectible_relic()
+	if nearby_relic:
+		hint_label.text = str(nearby_relic.call("get_interact_prompt")) if nearby_relic.has_method("get_interact_prompt") else "[E] Ambil Artefak"
 		hint_label.visible = true
 		return
 
@@ -408,7 +547,22 @@ func update_interact_hint() -> void:
 		hint_label.visible = true
 		return
 
+	if hide_spot and hide_spot.has_method("get_interact_prompt"):
+		hint_label.text = str(hide_spot.call("get_interact_prompt", self))
+		hint_label.visible = true
+		return
+
+	if not custom_interact_hint.is_empty():
+		hint_label.text = custom_interact_hint
+		hint_label.visible = true
+		return
+
 	hint_label.visible = false
+
+
+func set_custom_interact_hint(text: String) -> void:
+	custom_interact_hint = text
+	update_interact_hint()
 
 
 func _on_carry_item_picked_up(item: RigidBody3D) -> void:
@@ -422,6 +576,13 @@ func _on_carry_item_dropped(_item: RigidBody3D, _pos: Vector3) -> void:
 
 func _input(event: InputEvent) -> void:
 	if not input_enabled:
+		return
+
+	if is_in_wardrobe:
+		if event.is_action_pressed("interact") and not event.is_echo():
+			if current_hiding_spot and is_instance_valid(current_hiding_spot) and current_hiding_spot.has_method("toggle_wardrobe"):
+				current_hiding_spot.call("toggle_wardrobe", self)
+				update_interact_hint()
 		return
 
 	if event.is_action_pressed("shifting") or (
@@ -457,6 +618,20 @@ func _input(event: InputEvent) -> void:
 	# E saat membawa barang: taruh dulu, tanpa cek jarak pickup.
 	if item_dipegang != null:
 		taruh_item()
+		return
+
+	# E saat dekat lemari kayu: masuk/keluar tempat persembunyian.
+	var hide_spot := _get_preferred_hiding_spot()
+	if hide_spot and hide_spot.has_method("is_wardrobe_spot") and bool(hide_spot.call("is_wardrobe_spot")):
+		if hide_spot.has_method("toggle_wardrobe") and bool(hide_spot.call("toggle_wardrobe", self)):
+			update_interact_hint()
+			return
+
+	# E saat dekat floating relic collectible: ambil & buat mengorbit bahu.
+	var nearby_relic := _get_nearest_collectible_relic()
+	if nearby_relic and nearby_relic.has_method("collect") and bool(nearby_relic.call("collect", self)):
+		get_viewport().set_input_as_handled()
+		update_interact_hint()
 		return
 
 	# E saat dekat barang pickup: ambil barang.
@@ -815,6 +990,11 @@ func _physics_process(delta: float) -> void:
 			velocity.x = move_toward(velocity.x, 0.0, DECELERATION * delta)
 			velocity.z = move_toward(velocity.z, 0.0, DECELERATION * delta)
 		move_and_slide()
+		return
+
+	if is_in_wardrobe:
+		velocity = Vector3.ZERO
+		update_interact_hint()
 		return
 
 	wall_lock_timer = maxf(wall_lock_timer - delta, 0.0)

@@ -28,10 +28,12 @@ var _quests: Array[Dictionary] = [
 	{
 		"title": "Menara Waktu",
 		"chapter": "BAB II  /  CLOCK",
-		"description": "Gunakan [T] untuk berpindah antara dimensi Remembered & Forgotten. Temukan jam di tiap dimensi lalu tekan [E] untuk memutar jarum jam hingga keduanya menunjuk pukul 12:00 agar pintu berikutnya terbuka.",
+		"description": "Gunakan [T] untuk berpindah antara dimensi Remembered & Forgotten. Sinkronkan kedua jam ke 12:00, kumpulkan 3 Artefak Waktu, lalu pasang di pintu ganda lantai atas untuk membukanya.",
 		"objectives": [
 			{"text": "Sinkronkan 2 jam ke 12:00 ([T] ganti dimensi & [E] putar jam)", "complete": false, "progress": "0/2"},
-			{"text": "Naik ke lantai atas & masuk ke pintu cahaya", "complete": false, "progress": ""},
+			{"text": "Samakan Jam Lt 1 & Lt 2 ke pukul 9:00 ([T] geser dimensi Lt 2, [E] putar)", "complete": false, "progress": "0/2"},
+			{"text": "Kumpulkan 3 Artefak Waktu & buka pintu ganda ruangan", "complete": false, "progress": "0/3"},
+			{"text": "Lewati pintu ganda yang terbuka & masuk ke pintu cahaya", "complete": false, "progress": ""},
 		],
 	},
 ]
@@ -103,8 +105,8 @@ func select_quest(index: int, show_hint: bool = false) -> void:
 		_show_objective_hint()
 
 
-func show_objective_toast() -> void:
-	_show_objective_hint()
+func show_objective_toast(objective_index: int = -1) -> void:
+	_show_objective_hint(objective_index)
 
 
 func _open_journal() -> void:
@@ -180,6 +182,19 @@ func set_objective_progress(quest_index: int, objective_index: int, progress: St
 	if objective_index < 0 or objective_index >= objectives.size():
 		return
 	objectives[objective_index]["progress"] = progress
+	_quests[quest_index]["objectives"] = objectives
+	if quest_index == _selected_quest:
+		_render_details()
+		_refresh_objective_hint()
+
+
+func set_objective_text(quest_index: int, objective_index: int, text: String) -> void:
+	if quest_index < 0 or quest_index >= _quests.size():
+		return
+	var objectives: Array = _quests[quest_index]["objectives"]
+	if objective_index < 0 or objective_index >= objectives.size():
+		return
+	objectives[objective_index]["text"] = text
 	_quests[quest_index]["objectives"] = objectives
 	if quest_index == _selected_quest:
 		_render_details()
@@ -321,10 +336,10 @@ func _build_objective_hint() -> void:
 	content.add_child(_objective_hint_progress)
 
 
-func _show_objective_hint() -> void:
+func _show_objective_hint(override_index: int = -1) -> void:
 	if not is_instance_valid(_objective_hint) or _journal_open:
 		return
-	_refresh_objective_hint()
+	_refresh_objective_hint(override_index)
 	if _hint_tween != null and _hint_tween.is_valid():
 		_hint_tween.kill()
 	_objective_hint.show()
@@ -345,10 +360,16 @@ func _hide_objective_hint() -> void:
 		_objective_hint.hide()
 
 
-func _refresh_objective_hint() -> void:
+func _refresh_objective_hint(override_index: int = -1) -> void:
 	if not is_instance_valid(_objective_hint_text):
 		return
 	var objectives: Array = _quests[_selected_quest]["objectives"]
+	if override_index >= 0 and override_index < objectives.size():
+		var obj: Dictionary = objectives[override_index]
+		_objective_hint_text.text = str(obj["text"])
+		_objective_hint_progress.text = str(obj["progress"])
+		_objective_hint_progress.visible = not str(obj["progress"]).is_empty()
+		return
 	for objective in objectives:
 		if not bool(objective["complete"]):
 			_objective_hint_text.text = str(objective["text"])

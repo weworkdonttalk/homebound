@@ -30,9 +30,12 @@ var _ch1_portal_done: bool = false
 
 # Chapter 2 progress tracking guards
 var _ch2_clocks_done: bool = false
+var _ch2_wall_clocks_done: bool = false
 var _ch2_missing_done: bool = false
 var _ch2_erased_done: bool = false
 var _ch2_pendulum_done: bool = false
+var _ch2_relic_collected: bool = false
+var _ch2_relic_delivered: bool = false
 var _ch2_portal_done: bool = false
 
 
@@ -185,9 +188,12 @@ func _reset_ch1_flags() -> void:
 	_ch1_stairs_done = false
 	_ch1_portal_done = false
 	_ch2_clocks_done = false
+	_ch2_wall_clocks_done = false
 	_ch2_missing_done = false
 	_ch2_erased_done = false
 	_ch2_pendulum_done = false
+	_ch2_relic_collected = false
+	_ch2_relic_delivered = false
 	_ch2_portal_done = false
 
 
@@ -412,6 +418,16 @@ func _bind_chapter2_events(scene_root: Node) -> void:
 		mgr.connect("two_clocks_updated", _on_ch2_clocks_progress)
 	if mgr.has_signal("two_clocks_completed"):
 		mgr.connect("two_clocks_completed", _on_ch2_clocks_done)
+	if mgr.has_signal("wall_clocks_updated"):
+		mgr.connect("wall_clocks_updated", _on_ch2_wall_clocks_progress)
+	if mgr.has_signal("wall_clocks_completed"):
+		mgr.connect("wall_clocks_completed", _on_ch2_wall_clocks_done)
+	if mgr.has_signal("wall_clocks_reset"):
+		mgr.connect("wall_clocks_reset", _on_ch2_wall_clocks_reset)
+	if mgr.has_signal("safe_room_state_changed"):
+		mgr.connect("safe_room_state_changed", _on_ch2_safe_room_state_changed)
+	if mgr.has_signal("inner_clock_step_changed"):
+		mgr.connect("inner_clock_step_changed", _on_ch2_inner_clock_step_changed)
 	if mgr.has_signal("missing_time_updated"):
 		mgr.connect("missing_time_updated", _on_ch2_missing_progress)
 	if mgr.has_signal("missing_time_completed"):
@@ -424,6 +440,14 @@ func _bind_chapter2_events(scene_root: Node) -> void:
 		mgr.connect("pendulum_progress_updated", _on_ch2_pendulum_progress)
 	if mgr.has_signal("pendulum_completed"):
 		mgr.connect("pendulum_completed", _on_ch2_pendulum_done)
+	if mgr.has_signal("relic_collected_updated"):
+		mgr.connect("relic_collected_updated", _on_ch2_relic_collected)
+	if mgr.has_signal("relic_stolen_by_eraser"):
+		mgr.connect("relic_stolen_by_eraser", _on_ch2_relic_stolen)
+	if mgr.has_signal("relic_delivered"):
+		mgr.connect("relic_delivered", _on_ch2_relic_delivered_progress)
+	if mgr.has_signal("all_relics_delivered"):
+		mgr.connect("all_relics_delivered", _on_ch2_relic_delivered)
 	if mgr.has_signal("chapter_completed"):
 		mgr.connect("chapter_completed", _on_ch2_chapter_completed)
 
@@ -443,6 +467,54 @@ func _on_ch2_clocks_done() -> void:
 	_quest_guide.set_objective_progress(1, 0, "2/2")
 	_quest_guide.set_objective_completed(1, 0, true)
 	_quest_guide.show_objective_toast()
+
+
+func _on_ch2_wall_clocks_progress(synced: int, total: int, target_hour: int) -> void:
+	if _ch2_wall_clocks_done or not is_instance_valid(_quest_guide):
+		return
+	_quest_guide.set_objective_progress(1, 1, "%d/%d (Pukul %d:00)" % [mini(synced, total), total, target_hour])
+	_quest_guide.show_objective_toast(1)
+
+
+func _on_ch2_wall_clocks_done() -> void:
+	if _ch2_wall_clocks_done or not is_instance_valid(_quest_guide):
+		return
+	_ch2_wall_clocks_done = true
+	_quest_guide.set_objective_progress(1, 1, "2/2 — Pintu ganda Lantai 2 terbuka!")
+	_quest_guide.set_objective_completed(1, 1, true)
+	_quest_guide.show_objective_toast(1)
+
+
+func _on_ch2_wall_clocks_reset(new_target_hour: int) -> void:
+	if not is_instance_valid(_quest_guide):
+		return
+	_ch2_wall_clocks_done = false
+	_quest_guide.set_objective_completed(1, 1, false)
+	_quest_guide.set_objective_text(1, 1, "Samakan Jam Lt 1 & Lt 2 ke pukul %d:00 ([T] geser dimensi Lt 2, [E] putar)" % new_target_hour)
+	_quest_guide.set_objective_progress(1, 1, "0/2 (Pukul %d:00)" % new_target_hour)
+	_quest_guide.show_objective_toast(1)
+
+
+func _on_ch2_safe_room_state_changed(entered: bool) -> void:
+	if not entered or not is_instance_valid(_quest_guide):
+		return
+	_quest_guide.set_objective_completed(1, 1, false)
+	_quest_guide.set_objective_text(1, 1, "Putar Jam Antik di dalam ruangan ke pukul 06:00 ([E] putar)")
+	_quest_guide.set_objective_progress(1, 1, "Saat ini: 03:00 | Target: 06:00")
+	_quest_guide.show_objective_toast(1)
+
+
+func _on_ch2_inner_clock_step_changed(current_step: int, target_step: int, solved: bool) -> void:
+	if not is_instance_valid(_quest_guide):
+		return
+	var cur_h := 12 if (current_step % 12) == 0 else (current_step % 12)
+	var tgt_h := 12 if (target_step % 12) == 0 else (target_step % 12)
+	if solved:
+		_quest_guide.set_objective_progress(1, 1, "%02d:00 — Pintu ganda terbuka untuk keluar!" % cur_h)
+		_quest_guide.set_objective_completed(1, 1, true)
+	else:
+		_quest_guide.set_objective_progress(1, 1, "Saat ini: %02d:00 | Target: %02d:00" % [cur_h, tgt_h])
+	_quest_guide.show_objective_toast(1)
 
 
 func _on_ch2_missing_progress(_matched: int, _total: int) -> void:
@@ -469,11 +541,49 @@ func _on_ch2_pendulum_done() -> void:
 	_ch2_pendulum_done = true
 
 
+func _on_ch2_relic_collected(collected: int, total: int) -> void:
+	if _ch2_relic_delivered or not is_instance_valid(_quest_guide):
+		return
+	_ch2_relic_collected = collected > 0
+	var suffix := " — pasang di pintu ganda" if collected >= total else ""
+	_quest_guide.set_objective_progress(1, 2, "%d/%d%s" % [mini(collected, total), total, suffix])
+	_quest_guide.show_objective_toast()
+
+
+func _on_ch2_relic_stolen(delivered_count: int = 0, total: int = 3) -> void:
+	if _ch2_relic_delivered or not is_instance_valid(_quest_guide):
+		return
+	_ch2_relic_collected = false
+	_quest_guide.set_objective_progress(1, 2, "%d/%d — Terlepas! Ambil ulang" % [mini(delivered_count, total), total])
+	_quest_guide.show_objective_toast()
+
+
+func _on_ch2_relic_delivered_progress(delivered_count: int, total: int) -> void:
+	if _ch2_relic_delivered or not is_instance_valid(_quest_guide):
+		return
+	_quest_guide.set_objective_progress(1, 2, "%d/%d Terpasang di pintu" % [mini(delivered_count, total), total])
+	_quest_guide.show_objective_toast()
+
+
+func _on_ch2_relic_delivered() -> void:
+	if _ch2_relic_delivered or not is_instance_valid(_quest_guide):
+		return
+	_ch2_relic_collected = true
+	_ch2_relic_delivered = true
+	_quest_guide.set_objective_progress(1, 2, "3/3 — Pintu ganda terbuka!")
+	_quest_guide.set_objective_completed(1, 2, true)
+	_quest_guide.show_objective_toast()
+
+
 func _on_ch2_chapter_completed() -> void:
 	if _ch2_portal_done or not is_instance_valid(_quest_guide):
 		return
 	_ch2_portal_done = true
 	if not _ch2_clocks_done:
 		_on_ch2_clocks_done()
-	_quest_guide.set_objective_completed(1, 1, true)
+	if not _ch2_wall_clocks_done:
+		_on_ch2_wall_clocks_done()
+	if not _ch2_relic_delivered:
+		_on_ch2_relic_delivered()
+	_quest_guide.set_objective_completed(1, 3, true)
 	_quest_guide.show_objective_toast()

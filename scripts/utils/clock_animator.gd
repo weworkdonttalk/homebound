@@ -8,8 +8,8 @@ extends Node
 ## ============================================================================
 
 @export var clock_paths: Array[NodePath] = []
-@export var randomize_speed_min: float = 0.8
-@export var randomize_speed_max: float = 1.25
+@export var randomize_speed_min: float = 0.25
+@export var randomize_speed_max: float = 0.38
 
 
 func _ready() -> void:

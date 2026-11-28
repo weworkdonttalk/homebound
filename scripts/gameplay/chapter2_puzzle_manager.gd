@@ -7,20 +7,34 @@ extends Node3D
 
 signal two_clocks_updated(synced_count: int, total_count: int)
 signal two_clocks_completed
+signal wall_clocks_updated(current_step: int, target_step: int, total_steps: int)
+signal wall_clocks_completed
+signal wall_clocks_reset(new_target_hour: int)
+signal safe_room_state_changed(entered: bool)
+signal inner_clock_step_changed(current_step: int, target_step: int, solved: bool)
 signal missing_time_updated(matched_count: int, total_count: int)
 signal missing_time_completed
 signal erased_progress_updated(collected: int, total_count: int)
 signal erased_room_completed
 signal pendulum_progress_updated(step_index: int, total_steps: int)
 signal pendulum_completed
+signal relic_collected_updated(collected: int, total: int)
+signal relic_stolen_by_eraser(delivered_count: int, total: int)
+signal relic_delivered(delivered_count: int, total: int)
+signal all_relics_delivered
 signal chapter_completed
 
 var two_clocks_done: bool = false
+var wall_clocks_done: bool = false
 var missing_time_done: bool = false
 var erased_room_done: bool = false
 var pendulum_done: bool = false
+var relic_delivered_done: bool = false
+var total_relics: int = 3
+var relics_delivered_count: int = 0
 
 var _two_clocks: Node = null
+var _wall_clocks: Node = null
 var _missing_time: Node = null
 var _erased_room: Node = null
 var _pendulum_zone: Node = null
@@ -28,6 +42,7 @@ var _world_manager: Node = null
 
 
 func _ready() -> void:
+	add_to_group("chapter2_puzzle_manager")
 	_world_manager = find_world_manager(self)
 	call_deferred("_wire_subsystems")
 
@@ -43,6 +58,19 @@ func _wire_subsystems() -> void:
 			_two_clocks.connect("progress_updated", _on_two_clocks_progress)
 		if _two_clocks.has_signal("puzzle_completed") and not _two_clocks.is_connected("puzzle_completed", _on_two_clocks_done):
 			_two_clocks.connect("puzzle_completed", _on_two_clocks_done)
+
+	_wall_clocks = root.find_child("WallClocksPuzzle", true, false)
+	if _wall_clocks:
+		if _wall_clocks.has_signal("wall_clock_step_changed") and not _wall_clocks.is_connected("wall_clock_step_changed", _on_wall_clocks_progress):
+			_wall_clocks.connect("wall_clock_step_changed", _on_wall_clocks_progress)
+		if _wall_clocks.has_signal("puzzle_completed") and not _wall_clocks.is_connected("puzzle_completed", _on_wall_clocks_done):
+			_wall_clocks.connect("puzzle_completed", _on_wall_clocks_done)
+		if _wall_clocks.has_signal("wall_clocks_reset") and not _wall_clocks.is_connected("wall_clocks_reset", _on_wall_clocks_reset):
+			_wall_clocks.connect("wall_clocks_reset", _on_wall_clocks_reset)
+		if _wall_clocks.has_signal("safe_room_state_changed") and not _wall_clocks.is_connected("safe_room_state_changed", _on_safe_room_state_changed):
+			_wall_clocks.connect("safe_room_state_changed", _on_safe_room_state_changed)
+		if _wall_clocks.has_signal("inner_clock_step_changed") and not _wall_clocks.is_connected("inner_clock_step_changed", _on_inner_clock_step_changed):
+			_wall_clocks.connect("inner_clock_step_changed", _on_inner_clock_step_changed)
 
 	_missing_time = root.find_child("MissingTimePuzzle", true, false)
 	if _missing_time:
@@ -69,6 +97,51 @@ func _wire_subsystems() -> void:
 	if portal and portal.has_signal("transition_started") and not portal.is_connected("transition_started", _on_portal_entered):
 		portal.connect("transition_started", _on_portal_entered)
 
+	var socket_zone := root.find_child("RelicSocketZone", true, false)
+	if socket_zone:
+		if "required_relic_count" in socket_zone:
+			total_relics = maxi(int(socket_zone.get("required_relic_count")), 1)
+		if socket_zone.has_signal("all_relics_delivered") and not socket_zone.is_connected("all_relics_delivered", notify_all_relics_delivered):
+			socket_zone.connect("all_relics_delivered", notify_all_relics_delivered)
+
+
+func _get_relic_progress_count() -> int:
+	var player := find_player(self)
+	var carried := 0
+	if player and "floating_relics" in player and player.get("floating_relics") is Array:
+		carried = (player.get("floating_relics") as Array).size()
+	return mini(relics_delivered_count + carried, total_relics)
+
+
+func notify_relic_collected(_relic: Node = null) -> void:
+	if relic_delivered_done:
+		return
+	relic_collected_updated.emit(_get_relic_progress_count(), total_relics)
+
+
+func notify_all_relics_reset() -> void:
+	if relic_delivered_done:
+		return
+	relic_stolen_by_eraser.emit(relics_delivered_count, total_relics)
+	relic_collected_updated.emit(relics_delivered_count, total_relics)
+
+
+func notify_relic_delivered(_relic: Node = null) -> void:
+	if relic_delivered_done:
+		return
+	relics_delivered_count = mini(relics_delivered_count + 1, total_relics)
+	relic_delivered.emit(relics_delivered_count, total_relics)
+	if relics_delivered_count >= total_relics:
+		notify_all_relics_delivered()
+
+
+func notify_all_relics_delivered() -> void:
+	if relic_delivered_done:
+		return
+	relic_delivered_done = true
+	relics_delivered_count = total_relics
+	all_relics_delivered.emit()
+
 
 func _on_two_clocks_progress(synced: int, total: int) -> void:
 	two_clocks_updated.emit(synced, total)
@@ -79,6 +152,30 @@ func _on_two_clocks_done() -> void:
 		return
 	two_clocks_done = true
 	two_clocks_completed.emit()
+
+
+func _on_wall_clocks_progress(step: int, target: int, total: int) -> void:
+	wall_clocks_updated.emit(step, target, total)
+
+
+func _on_wall_clocks_done() -> void:
+	if wall_clocks_done:
+		return
+	wall_clocks_done = true
+	wall_clocks_completed.emit()
+
+
+func _on_wall_clocks_reset(new_target_hour: int) -> void:
+	wall_clocks_done = false
+	wall_clocks_reset.emit(new_target_hour)
+
+
+func _on_safe_room_state_changed(entered: bool) -> void:
+	safe_room_state_changed.emit(entered)
+
+
+func _on_inner_clock_step_changed(current_step: int, target_step: int, solved: bool) -> void:
+	inner_clock_step_changed.emit(current_step, target_step, solved)
 
 
 func _on_missing_time_progress(matched: int, total: int) -> void:
@@ -176,7 +273,7 @@ static func is_player_busy(player: CharacterBody3D) -> bool:
 
 
 static func is_interact_pressed(event: InputEvent) -> bool:
-	if event.is_action_pressed("interaksi"):
+	if event.is_action_pressed("interact"):
 		return true
 	if event is InputEventKey:
 		var key_ev := event as InputEventKey
@@ -249,3 +346,135 @@ static func set_yellow_clock_hour(host: Node, clock_rig: Dictionary, hour: int, 
 	tw.tween_property(h_node, "rotation_degrees:z", cur_z + diff, duration)
 	if m_node and spin_minute:
 		tw.tween_property(m_node, "rotation_degrees:z", m_node.rotation_degrees.z - 360.0, duration)
+
+
+static func set_player_cutscene_lock(player: CharacterBody3D, locked: bool) -> void:
+	if player == null or not is_instance_valid(player):
+		return
+	if locked:
+		player.velocity = Vector3.ZERO
+	if player.has_method("set_input_enabled"):
+		player.call("set_input_enabled", not locked)
+	player.set_physics_process(not locked)
+	player.set_process_unhandled_input(not locked)
+
+
+static func play_door_open_cutscene(
+	host: Node,
+	door: Node3D,
+	cam_start: Vector3,
+	cam_end: Vector3,
+	look_target: Vector3,
+	pre_delay: float = 0.65,
+	open_dur: float = 1.35,
+	hold_after_open: float = 1.65,
+	on_pre_delay_done: Callable = Callable(),
+	on_after_door_open: Callable = Callable()
+) -> void:
+	if door == null or host == null or not host.is_inside_tree():
+		return
+	var tree := host.get_tree()
+	var viewport := host.get_viewport()
+	var prev_cam := viewport.get_camera_3d() if viewport else null
+	if DisplayServer.get_name() == "headless" or viewport == null or prev_cam == null or tree == null:
+		if on_pre_delay_done.is_valid():
+			on_pre_delay_done.call()
+		if door.has_method("unlock_and_open"):
+			door.call("unlock_and_open")
+		if on_after_door_open.is_valid():
+			on_after_door_open.call(null, null)
+		return
+
+	var player := find_player(host)
+	var scene_root := tree.current_scene
+	var rig := scene_root.find_child("CameraRig", true, false) as Node3D if scene_root else null
+	if rig and "camera" in rig and rig.get("camera") is Camera3D:
+		prev_cam = rig.get("camera") as Camera3D
+
+	var paused_enemies: Array[Node] = []
+	for enemy in tree.get_nodes_in_group("eraser_ai"):
+		if is_instance_valid(enemy) and enemy.is_physics_processing():
+			enemy.set_physics_process(false)
+			paused_enemies.append(enemy)
+
+	set_player_cutscene_lock(player, true)
+	if rig and "_is_focusing" in rig:
+		rig.set("_is_focusing", true)
+
+	if pre_delay > 0.0:
+		await tree.create_timer(pre_delay).timeout
+		if not host.is_inside_tree():
+			return
+
+	if on_pre_delay_done.is_valid():
+		on_pre_delay_done.call()
+
+	var cut_cam := Camera3D.new()
+	cut_cam.name = "DoorRevealCutsceneCam"
+	cut_cam.fov = 44.0
+	host.add_child(cut_cam)
+	cut_cam.global_position = cam_start
+	cut_cam.look_at(look_target, Vector3.UP)
+	cut_cam.current = true
+
+	var reveal_light := OmniLight3D.new()
+	reveal_light.light_color = Color(1.0, 0.86, 0.62)
+	reveal_light.light_energy = 0.0
+	reveal_light.omni_range = 10.0
+	host.add_child(reveal_light)
+	var light_dir := (cam_start - look_target)
+	light_dir.y = 0.0
+	light_dir = light_dir.normalized() if light_dir.length_squared() > 0.001 else Vector3.RIGHT
+	reveal_light.global_position = look_target + light_dir * 2.0 + Vector3(0.0, 0.85, 0.0)
+
+	var dolly_dur := maxf(open_dur + 0.55, 1.9)
+	var cam_tw := host.create_tween().set_parallel(true)
+	cam_tw.tween_method(func(t: float) -> void:
+		if is_instance_valid(cut_cam):
+			cut_cam.global_position = cam_start.lerp(cam_end, t)
+			cut_cam.look_at(look_target, Vector3.UP)
+	, 0.0, 1.0, dolly_dur).set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
+	cam_tw.tween_property(reveal_light, "light_energy", 2.2, 0.45).set_trans(Tween.TRANS_SINE)
+
+	await tree.create_timer(0.32).timeout
+	if not host.is_inside_tree():
+		return
+
+	if is_instance_valid(door):
+		if "open_duration" in door:
+			door.set("open_duration", open_dur)
+		if "durasi_animasi" in door:
+			door.set("durasi_animasi", open_dur)
+		if door.has_method("unlock_and_open"):
+			door.call("unlock_and_open")
+
+	await tree.create_timer(hold_after_open).timeout
+	if not host.is_inside_tree():
+		return
+
+	if on_after_door_open.is_valid():
+		await on_after_door_open.call(cut_cam, reveal_light)
+		if not host.is_inside_tree():
+			return
+
+	if is_instance_valid(reveal_light):
+		var fade_l := host.create_tween()
+		fade_l.tween_property(reveal_light, "light_energy", 0.0, 0.25)
+		await fade_l.finished
+
+	if is_instance_valid(prev_cam):
+		prev_cam.current = true
+	elif rig and "camera" in rig and rig.get("camera") is Camera3D:
+		(rig.get("camera") as Camera3D).current = true
+
+	if is_instance_valid(cut_cam):
+		cut_cam.queue_free()
+	if is_instance_valid(reveal_light):
+		reveal_light.queue_free()
+
+	if rig and "_is_focusing" in rig:
+		rig.set("_is_focusing", false)
+	set_player_cutscene_lock(player, false)
+	for enemy in paused_enemies:
+		if is_instance_valid(enemy):
+			enemy.set_physics_process(true)

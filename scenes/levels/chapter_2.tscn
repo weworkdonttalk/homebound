@@ -18,9 +18,12 @@
 [ext_resource type="PackedScene" uid="uid://dcranecndq61y" path="res://assets/chap 2/vase_flower_pot_-_24_mb.glb" id="9_ryguw"]
 [ext_resource type="PackedScene" uid="uid://knfb3wxh7cnk" path="res://assets/chap 2/old_closet.glb" id="10_d13ii"]
 [ext_resource type="PackedScene" uid="uid://brnasro4byd6b" path="res://assets/chap 2/free_celestial_armillary_sphere_steampunk_orrery.glb" id="11_1u8w0"]
+[ext_resource type="Script" uid="uid://chraqn7ko2lhl" path="res://scripts/enemies/the_eraser.gd" id="11_cr1ui"]
 [ext_resource type="PackedScene" uid="uid://c5gql5cs5up8w" path="res://assets/chap 2/cobweb_3.glb" id="12_0odxb"]
+[ext_resource type="AnimationLibrary" uid="uid://bsfpvg3djxktn" path="res://animations/enemies/the_eraser_animations.tres" id="13_b0qjk"]
 [ext_resource type="PackedScene" uid="uid://b6deoa7hp5lhy" path="res://assets/chap 2/antique_chair.glb" id="13_lswn8"]
 [ext_resource type="PackedScene" uid="uid://dyo03pskg8bfe" path="res://assets/chap 2/overgrown_train_station_clutter_-_arrangement.glb" id="14_a6jrf"]
+[ext_resource type="AnimationNodeStateMachine" uid="uid://bwlh6pf3iu2yk" path="res://animations/enemies/the_eraser_state_machine.tres" id="14_wbmf0"]
 [ext_resource type="PackedScene" uid="uid://bvyuxqmr28s3r" path="res://assets/chap 2/wall_lamp_-_2048px2.glb" id="15_xuqvo"]
 [ext_resource type="PackedScene" uid="uid://blbxkkrittgbe" path="res://assets/chap 2/dining_scene.glb" id="16_qsp4k"]
 [ext_resource type="PackedScene" uid="uid://cjoi1c6bw7iuf" path="res://assets/chap 2/framed_picture_for_halloween.glb" id="17_kq58d"]
@@ -30,12 +33,12 @@
 [ext_resource type="PackedScene" uid="uid://cu3qjeskqvfh2" path="res://assets/chap 2/lowpoly_cardboard_box.glb" id="21_4k2k6"]
 [ext_resource type="PackedScene" uid="uid://bxh1j36v2tkjw" path="res://assets/chap 2/carpet_ruined_old_free.glb" id="22_jq2sk"]
 [ext_resource type="PackedScene" uid="uid://bkib2ebdxnict" path="res://assets/chap 2/victorian_bookshelf.glb" id="23_1u8w0"]
+[ext_resource type="Script" uid="uid://7ureeg3ide2v" path="res://scripts/gameplay/floating_relic.gd" id="23_sjx5g"]
 [ext_resource type="PackedScene" uid="uid://bjggdt0osj5l8" path="res://assets/chap 2/vintage_wooden_workdesk.glb" id="28_4k2k6"]
 [ext_resource type="PackedScene" uid="uid://cj6h03h8il6ce" path="res://meja_motif_unique.glb" id="29_0rl1p"]
 [ext_resource type="PackedScene" uid="uid://mdde2ty7y7ls" path="res://assets/chap 2/stepping_stones.glb" id="30_htxhm"]
 [ext_resource type="PackedScene" uid="uid://hpprcc2gnwlf" path="res://assets/chap 2/broken_steampunk_clock.glb" id="32_0rl1p"]
 [ext_resource type="PackedScene" uid="uid://cpx1c42xjluv6" path="res://assets/chap 2/clock_loop_animation.glb" id="32_jq2sk"]
-[ext_resource type="PackedScene" uid="uid://bea41wel262p5" path="res://assets/chap 2/door.glb" id="34_ok6jj"]
 [ext_resource type="PackedScene" uid="uid://bvf0thm1lb3we" path="res://assets/chap 2/stone_floor.glb" id="35_facbu"]
 [ext_resource type="Script" uid="uid://cmtuv7nhn74uv" path="res://scripts/characters/mc.gd" id="39_qi2ag"]
 [ext_resource type="PackedScene" uid="uid://kgriwra7wttd" path="res://assets/characters/mc/char_no_light.fbx" id="40_kqdd5"]
@@ -56,6 +59,11 @@
 [ext_resource type="Script" uid="uid://dt8m616jaiww" path="res://scripts/gameplay/two_clocks_puzzle.gd" id="54_3x87c"]
 [ext_resource type="Script" uid="uid://xly6h20oj2di" path="res://scripts/gameplay/clock_dial_station.gd" id="55_rcc8y"]
 [ext_resource type="Script" uid="uid://ly0oqvm1cbdu" path="res://scripts/door_portal.gd" id="56_6cbox"]
+[ext_resource type="Script" uid="uid://siotgpfwdaq5" path="res://scripts/tembok_kebelah.gd" id="57_tembok"]
+[ext_resource type="NavigationMesh" path="res://scenes/levels/chapter_2_navmesh.tres" id="61_b0qjk"]
+[ext_resource type="Script" uid="uid://coahup6hp0unj" path="res://scripts/gameplay/monster_reveal_cutscene.gd" id="62_wbmf0"]
+[ext_resource type="Script" uid="uid://dwcf0pjwgwsao" path="res://scripts/gameplay/hiding_spot.gd" id="63_rcc8y"]
+[ext_resource type="Script" uid="uid://ccapvhb07dh7i" path="res://scripts/gameplay/relic_socket_zone.gd" id="65_y8k7t"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0xm2m"]
 albedo_texture = ExtResource("1_ig7tw")
@@ -175,6 +183,13 @@ size = Vector3(1.2365723, 1, 5.5545425)
 [sub_resource type="BoxShape3D" id="BoxShape3D_om473"]
 size = Vector3(55, 1, 28)
 
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_b0qjk"]
+radius = 0.42
+height = 4.8
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_wbmf0"]
+size = Vector3(1.6, 3, 2.2)
+
 [sub_resource type="BoxMesh" id="BoxMesh_2cqfq"]
 material = SubResource("StandardMaterial3D_7mycd")
 size = Vector3(1.9787598, 1, 4.1288986)
@@ -257,6 +272,15 @@ size = Vector3(3, 0.35, 2.2984)
 [sub_resource type="BoxShape3D" id="BoxShape3D_RampTopRight"]
 size = Vector3(3, 0.35, 2.2984)
 
+[sub_resource type="SphereShape3D" id="SphereShape3D_g47qq"]
+radius = 12.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_sjx5g"]
+radius = 12.0
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_y8k7t"]
+radius = 12.0
+
 [sub_resource type="BoxShape3D" id="BoxShape3D_g2edu"]
 size = Vector3(1, 20, 25)
 
@@ -325,7 +349,7 @@ size = Vector3(96, 4, 44)
 size = Vector3(88, 28, 34)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_stair_ascend"]
-size = Vector3(3.6626954, 0.8192383, 2.2)
+size = Vector3(3.6626954, 2.091748, 2.2)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_stair_descend"]
 size = Vector3(3.4, 2.2, 2.2)
@@ -334,8 +358,52 @@ size = Vector3(3.4, 2.2, 2.2)
 radius = 0.4
 height = 2.2
 
+[sub_resource type="BoxMesh" id="BoxMesh_sliding_wall"]
+material = SubResource("StandardMaterial3D_0xm2m")
+size = Vector3(0.21, 6, 3.45)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_sliding_wall"]
+size = Vector3(0.45, 6, 3.45)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_sliding_trigger"]
+size = Vector3(4.5, 4.5, 8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_sliding_wall_front"]
+material = SubResource("StandardMaterial3D_0xm2m")
+size = Vector3(0.21, 6.2, 2.3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_sliding_wall_front"]
+size = Vector3(0.45, 6.2, 2.3)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_sliding_trigger_front"]
+size = Vector3(10, 4.5, 6.5)
+
 [sub_resource type="BoxShape3D" id="BoxShape3D_door_portal"]
 size = Vector3(3.2, 4.5, 2.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_rcc8y"]
+size = Vector3(4.5, 4, 22)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_cd4dd"]
+size = Vector3(6.4, 1.7, 2.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_sjx5g"]
+size = Vector3(2.2, 2.4, 3.2)
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_d7d62"]
+radius = 2.2
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_y8k7t"]
+size = Vector3(4, 2.4, 3.6)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_g47qq"]
+size = Vector3(4.2, 2.6, 3.8)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_d7d62"]
+size = Vector3(14, 7, 29.5)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_r58ga"]
+size = Vector3(4.8, 2.8, 4.4)
 
 [node name="Node3D" type="Node3D" unique_id=1372690782]
 script = ExtResource("1_kqdd5")
@@ -661,13 +729,58 @@ mesh = SubResource("BoxMesh_w48qg")
 transform = Transform3D(4.431673, 0, 0, 0, 0.29469672, 0, 0, 0, 5.3216457, 42.453777, 0, -2.074192)
 mesh = SubResource("BoxMesh_vivmo")
 
-[node name="T-Pose" parent="ruangan2/Lantai" unique_id=1045637742 instance=ExtResource("8_kq58d")]
-transform = Transform3D(0.36115035, 0, 0.45182127, 0, 0.4469819, 0, -0.49827483, 0, 0.32748073, 1.8249321, 0, -4.565669)
-script = ExtResource("49_trimesh")
-
 [node name="CollisionShape3D_BackFloor" type="CollisionShape3D" parent="ruangan2/Lantai" unique_id=933648330]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 22, -0.5, -1)
 shape = SubResource("BoxShape3D_om473")
+
+[node name="TheEraser" type="CharacterBody3D" parent="ruangan2/Lantai" unique_id=882651463]
+transform = Transform3D(0.5868622, 0, 0.8096868, 0, 1, 0, -0.8096868, 0, 0.5868622, 1.8249321, 0, -4.565669)
+collision_layer = 8
+floor_max_angle = 0.87266463
+floor_snap_length = 0.35
+safe_margin = 0.04
+script = ExtResource("11_cr1ui")
+remembered_anchor = NodePath("../../../TheEraserMemoryAnchors/AnchorRemembered")
+forgotten_anchor = NodePath("../../../TheEraserMemoryAnchors/AnchorForgotten")
+
+[node name="VisualModel" parent="ruangan2/Lantai/TheEraser" unique_id=1045637742 instance=ExtResource("8_kq58d")]
+transform = Transform3D(0.42, 0, 0, 0, 0.42, 0, 0, 0, 0.42, 0, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ruangan2/Lantai/TheEraser" unique_id=1947034376]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)
+shape = SubResource("CapsuleShape3D_b0qjk")
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="ruangan2/Lantai/TheEraser" unique_id=1302378091]
+path_desired_distance = 0.6
+target_desired_distance = 1.1
+avoidance_enabled = true
+height = 4.8
+radius = 0.35
+
+[node name="HitboxArea" type="Area3D" parent="ruangan2/Lantai/TheEraser" unique_id=479266036]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="ruangan2/Lantai/TheEraser/HitboxArea" unique_id=702891654]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 1.35)
+shape = SubResource("BoxShape3D_wbmf0")
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="ruangan2/Lantai/TheEraser" unique_id=2081511904]
+libraries/ = ExtResource("13_b0qjk")
+
+[node name="AnimationTree" type="AnimationTree" parent="ruangan2/Lantai/TheEraser" unique_id=1599842088]
+tree_root = ExtResource("14_wbmf0")
+anim_player = NodePath("../AnimationPlayer")
+
+[node name="JumpscareCamPoint" type="Marker3D" parent="ruangan2/Lantai/TheEraser" unique_id=1148124711]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.55, 0.95)
+
+[node name="JumpscareFaceLight" type="OmniLight3D" parent="ruangan2/Lantai/TheEraser/JumpscareCamPoint" unique_id=299434948]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.08, -0.15)
+light_color = Color(0.95, 0.92, 0.88, 1)
+light_energy = 0.0
+omni_range = 4.0
 
 [node name="Lantai2" type="StaticBody3D" parent="ruangan2" unique_id=1901913193]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.148718, 0)
@@ -911,6 +1024,10 @@ script = ExtResource("49_trimesh")
 transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 17.219795, 0, 1.5155573)
 script = ExtResource("49_trimesh")
 
+[node name="Sketchfab_Scene17" parent="object" unique_id=738780623 instance=ExtResource("8_getpj")]
+transform = Transform3D(3, 0, 0, 0, 3, 0, 0, 0, 3, 48.78583, 6.5799017, -10.911168)
+script = ExtResource("49_trimesh")
+
 [node name="Sketchfab_Scene5" parent="object" unique_id=417181995 instance=ExtResource("9_ryguw")]
 transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 43.857445, 0, 8.823358)
 script = ExtResource("49_trimesh")
@@ -927,13 +1044,32 @@ script = ExtResource("49_trimesh")
 transform = Transform3D(-0.17433365, -0.21227749, -2.3420622, -0.36330882, 2.322726, -0.1834815, 2.3234293, 0.34727064, -0.20442228, 46.321342, -1.0084038, 1.7493715)
 script = ExtResource("49_trimesh")
 
-[node name="Sketchfab_Scene8" parent="object" unique_id=524785312 instance=ExtResource("11_1u8w0")]
-transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 17.18053, 2.8344631, 1.6529417)
+[node name="Sketchfab_Scene46" parent="object" unique_id=363846579 instance=ExtResource("10_d13ii")]
+transform = Transform3D(0.27947628, 0.2278012, 2.3303883, -0.36330894, 2.3227265, -0.18348154, -2.3131387, -0.33729118, 0.31037864, 93.43878, -1.0084038, 8.42511)
 script = ExtResource("49_trimesh")
 
-[node name="Sketchfab_Scene17" parent="object" unique_id=1993494797 instance=ExtResource("11_1u8w0")]
-transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 50.983807, 8.350537, -12.552246)
+[node name="Sketchfab_Scene47" parent="object" unique_id=377752803 instance=ExtResource("10_d13ii")]
+transform = Transform3D(0.10322508, 0, -2.3558555, 0, 2.358117, 0, 2.3558555, 0, 0.10322508, 60.366756, 6.74804, 8.42511)
 script = ExtResource("49_trimesh")
+
+[node name="Sketchfab_Scene8" parent="object" unique_id=524785312 instance=ExtResource("11_1u8w0")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 17.18053, 2.7872198, 1.6529417)
+script = ExtResource("23_sjx5g")
+display_name = "Artefak Waktu I"
+
+[node name="PickupZone" type="Area3D" parent="object/Sketchfab_Scene8" unique_id=1987265133]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="object/Sketchfab_Scene8/PickupZone" unique_id=1443694216]
+shape = SubResource("SphereShape3D_g47qq")
+
+[node name="RelicGlowLight" type="OmniLight3D" parent="object/Sketchfab_Scene8" unique_id=1094564646]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 0)
+light_color = Color(1, 0.86, 0.56, 1)
+light_energy = 1.2
+omni_range = 4.5
 
 [node name="Sketchfab_Scene9" parent="object" unique_id=1673621059 instance=ExtResource("12_0odxb")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.465977, 2.2284613, 0.15587413)
@@ -969,6 +1105,10 @@ script = ExtResource("49_trimesh")
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 89.733246, 2.7929244, -13.467192)
 script = ExtResource("49_trimesh")
 
+[node name="Sketchfab_Scene44" parent="object" unique_id=305335058 instance=ExtResource("18_seu75")]
+transform = Transform3D(0.00038534502, -0.49727243, 0.05215342, 0.0036740873, 0.052154843, 0.49725884, -0.49998635, 0, 0.00369424, 81.9066, 0.81558704, 0.042459726)
+script = ExtResource("49_trimesh")
+
 [node name="Sketchfab_Scene21" parent="object" unique_id=1324051134 instance=ExtResource("18_seu75")]
 transform = Transform3D(0.5, 0, 0, 0, 0.5, 0, 0, 0, 0.5, 56.438717, 2.466528, -13.542319)
 script = ExtResource("49_trimesh")
@@ -981,7 +1121,7 @@ transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 52.579422, 0, -13.255247)
 script = ExtResource("49_trimesh")
 
 [node name="Sketchfab_Scene24" parent="object" unique_id=1843453955 instance=ExtResource("21_4k2k6")]
-transform = Transform3D(0.41304913, -0.28176305, 0, 0.28176305, 0.41304913, 0, 0, 0, 0.5, 64.50771, 0.57902384, 3.561925)
+transform = Transform3D(0.41304913, -0.28176305, 0, 0.28176305, 0.41304913, 0, 0, 0, 0.5, 64.50771, 0.30913973, 3.561925)
 script = ExtResource("49_trimesh")
 
 [node name="Sketchfab_Scene25" parent="object" unique_id=351100445 instance=ExtResource("17_kq58d")]
@@ -1024,6 +1164,10 @@ script = ExtResource("49_trimesh")
 transform = Transform3D(1.2596679, -0.009473145, 0, 0.009932682, 1.2013919, 0, 0, 0, 1.770479, 47.275486, -0.0097334385, -11.534417)
 script = ExtResource("49_trimesh")
 
+[node name="Sketchfab_Scene45" parent="object" unique_id=1057077104 instance=ExtResource("28_4k2k6")]
+transform = Transform3D(-1.259601, 0.009472644, -0.018240802, 0.009932682, 1.2013918, 0, 0.0129780425, -9.7599455e-05, -1.7703848, 92.60718, 0.19982731, 6.0370317)
+script = ExtResource("49_trimesh")
+
 [node name="Sketchfab_Scene35" parent="object" unique_id=137956467 instance=ExtResource("28_4k2k6")]
 transform = Transform3D(0.19329709, -1.1872009, 0, 1.2447884, 0.18435465, 0, 0, 0, 1.7704787, 4.0759916, 0.93322396, 2.0923665)
 script = ExtResource("49_trimesh")
@@ -1062,6 +1206,47 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16.151863, 0.12359619, 8.1081
 [node name="Sketchfab_Scene43" parent="object" unique_id=143131524 instance=ExtResource("32_0rl1p")]
 transform = Transform3D(-0.012481041, 0, -0.9999221, 0, 1, 0, 0.9999221, 0, -0.012481041, 211.67107, 46.362934, 3.4928436)
 
+[node name="Relic_02" parent="object" unique_id=1105489601 instance=ExtResource("11_1u8w0")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 48.964123, 9.412679, -10.602854)
+script = ExtResource("23_sjx5g")
+relic_id = "relic_2"
+display_name = "Artefak Waktu II"
+home_dimension = "Forgotten"
+
+[node name="PickupZone" type="Area3D" parent="object/Relic_02" unique_id=916401046]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="object/Relic_02/PickupZone" unique_id=1076550209]
+shape = SubResource("SphereShape3D_sjx5g")
+
+[node name="RelicGlowLight" type="OmniLight3D" parent="object/Relic_02" unique_id=601357223]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 0)
+light_color = Color(1, 0.86, 0.56, 1)
+light_energy = 1.2
+omni_range = 4.5
+
+[node name="Relic_03" parent="object" unique_id=1531707033 instance=ExtResource("11_1u8w0")]
+transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 68.14928, 1.8654685, 2.1548223)
+script = ExtResource("23_sjx5g")
+relic_id = "relic_3"
+display_name = "Artefak Waktu III"
+
+[node name="PickupZone" type="Area3D" parent="object/Relic_03" unique_id=215035694]
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="object/Relic_03/PickupZone" unique_id=1271092113]
+shape = SubResource("SphereShape3D_y8k7t")
+
+[node name="RelicGlowLight" type="OmniLight3D" parent="object/Relic_03" unique_id=1175395120]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.5, 0)
+light_color = Color(1, 0.86, 0.56, 1)
+light_energy = 1.2
+omni_range = 4.5
+
 [node name="AnimationPlayer" type="AnimationPlayer" parent="." unique_id=315449955]
 
 [node name="Sketchfab_Scene" parent="." unique_id=2127552791 instance=ExtResource("32_jq2sk")]
@@ -1082,8 +1267,11 @@ transform = Transform3D(5.7357645, 0, 8.191521, 0, 10, 0, -8.191521, 0, 5.735764
 [node name="Sketchfab_Scene6" parent="." unique_id=1961571329 instance=ExtResource("32_jq2sk")]
 transform = Transform3D(5.2066073, 0, -0.0064334916, 0, 5.1700144, 0, -0.0068513993, 0, -4.889025, 84.7455, 11.04477, -14.047255)
 
+[node name="Sketchfab_Scene13" parent="." unique_id=978845238 instance=ExtResource("32_jq2sk")]
+transform = Transform3D(1.1689017, 0, -0.0021781195, 0, 1.2231784, 0, -0.0015381632, 0, -1.6552258, 52.428917, 9.568091, -11.177062)
+
 [node name="Sketchfab_Scene15" parent="." unique_id=2055080337 instance=ExtResource("32_jq2sk")]
-transform = Transform3D(3.0249836, 0, 0.0076554017, 0, 3.00961, 0, -0.0039805905, 0, 5.8175955, 83.60639, 2.9193125, -12.850985)
+transform = Transform3D(3.0249836, 0, 0.0076554017, 0, 3.00961, 0, -0.0039805905, 0, 5.8175955, 83.60639, 2.9193125, -13.973715)
 
 [node name="Sketchfab_Scene14" parent="." unique_id=2040920358 instance=ExtResource("32_jq2sk")]
 transform = Transform3D(4.9999995, 0, -8.6602545, 0, 10, 0, 8.6602545, 0, 4.9999995, 110.7071, 11.534026, -7.4007397)
@@ -1100,16 +1288,8 @@ transform = Transform3D(4.9999995, 0, -8.6602545, 0, 10, 0, 8.6602545, 0, 4.9999
 [node name="Sketchfab_Scene10" parent="." unique_id=135524241 instance=ExtResource("32_jq2sk")]
 transform = Transform3D(4.9999995, 0, -8.6602545, 0, 10, 0, 8.6602545, 0, 4.9999995, 161.29553, 11.534026, -7.4007397)
 
-[node name="Sketchfab_Scene11" parent="." unique_id=1199769921 instance=ExtResource("34_ok6jj")]
-transform = Transform3D(0.07, 0, 0, 0, 0.07, 0, 0, 0, 0.07, 175.54993, 16.363777, 4.6682663)
-script = ExtResource("49_trimesh")
-
 [node name="Sketchfab_Scene12" parent="." unique_id=1348707557 instance=ExtResource("35_facbu")]
-transform = Transform3D(0.06, 0, 0, 0, 0.06, 0, 0, 0, 0.06, 177.8995, 8.760451, 4.854967)
-script = ExtResource("49_trimesh")
-
-[node name="Sketchfab_Scene13" parent="." unique_id=260045768 instance=ExtResource("11_1u8w0")]
-transform = Transform3D(0.1, 0, 0, 0, 0.1, 0, 0, 0, 0.1, 69.766716, 1.9021506, 2.096502)
+transform = Transform3D(0.06, 0, 0, 0, 0.06, 0, 0, 0, 0.06, 177.8995, 6.6231585, 4.854967)
 script = ExtResource("49_trimesh")
 
 [node name="RoomBoundaries" type="StaticBody3D" parent="." unique_id=681762859]
@@ -1387,7 +1567,7 @@ spot_range = 22.0
 spot_angle = 50.0
 
 [node name="SpotLight_FinalDoor_Beacon" type="SpotLight3D" parent="AtmosphericLights" unique_id=1605592497]
-transform = Transform3D(1, 0, 0, 0, 0.087155804, 0.9961947, 0, -0.9961947, 0.087155804, 175.5, 21, 4.7)
+transform = Transform3D(1, 0, 0, 0, 0.087155804, 0.9961947, 0, -0.9961947, 0.087155804, 172.38669, 21, 4.7)
 light_color = Color(1, 0.88, 0.65, 1)
 light_energy = 6.5
 light_volumetric_fog_energy = 4.0
@@ -1495,7 +1675,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 68.66, 1, -5.8)
 script = ExtResource("50_stair")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="StairAscendZone" unique_id=1950110002]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0973587, -0.6903809, -1.9740458)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.0973587, -0.054125965, -1.9740458)
 shape = SubResource("BoxShape3D_stair_ascend")
 
 [node name="StairDescendZoneRight" type="Area3D" parent="." unique_id=1950110003]
@@ -1520,7 +1700,7 @@ shape = SubResource("BoxShape3D_stair_descend")
 
 [node name="ClockAnimator" type="Node" parent="." unique_id=1950111001]
 script = ExtResource("51_clockanim")
-clock_paths = Array[NodePath]([NodePath("../ruangan/tembok/Sketchfab_Scene"), NodePath("../object/Sketchfab_Scene2"), NodePath("../object/Sketchfab_Scene8"), NodePath("../object/Sketchfab_Scene17"), NodePath("../object/Sketchfab_Scene43"), NodePath("../Sketchfab_Scene"), NodePath("../Sketchfab_Scene2"), NodePath("../Sketchfab_Scene3"), NodePath("../Sketchfab_Scene4"), NodePath("../Sketchfab_Scene5"), NodePath("../Sketchfab_Scene6"), NodePath("../Sketchfab_Scene7"), NodePath("../Sketchfab_Scene8"), NodePath("../Sketchfab_Scene9"), NodePath("../Sketchfab_Scene10"), NodePath("../Sketchfab_Scene13"), NodePath("../Sketchfab_Scene14"), NodePath("../Sketchfab_Scene15")])
+clock_paths = Array[NodePath]([NodePath("../ruangan/tembok/Sketchfab_Scene"), NodePath("../object/Sketchfab_Scene2"), NodePath("../object/Sketchfab_Scene8"), NodePath("../object/Sketchfab_Scene17"), NodePath("../object/Sketchfab_Scene43"), NodePath("../Sketchfab_Scene"), NodePath("../Sketchfab_Scene2"), NodePath("../Sketchfab_Scene3"), NodePath("../Sketchfab_Scene4"), NodePath("../Sketchfab_Scene5"), NodePath("../Sketchfab_Scene7"), NodePath("../Sketchfab_Scene8"), NodePath("../Sketchfab_Scene9"), NodePath("../Sketchfab_Scene10"), NodePath("../Sketchfab_Scene14")])
 
 [node name="Player" type="CharacterBody3D" parent="." unique_id=1133031796 node_paths=PackedStringArray("anim_player", "visual_node")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.5, 0.15, 6.5)
@@ -1566,6 +1746,9 @@ light_energy = 2.2
 omni_range = 3.2
 omni_attenuation = 1.3
 
+[node name="RelicFloatAnchor" type="Marker3D" parent="Player" unique_id=571580395]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.55, 1.55, -0.55)
+
 [node name="char no light" parent="." unique_id=806530668 instance=ExtResource("40_kqdd5")]
 transform = Transform3D(1.35, 0, 0, 0, 1.35, 0, 0, 0, 1.35, -1.5, 0.15, 6.5)
 
@@ -1592,16 +1775,129 @@ script = ExtResource("53_lqav2")
 
 [node name="TwoClocksPuzzle" type="Node3D" parent="." unique_id=733196888]
 script = ExtResource("54_3x87c")
+clock_l1_path = null
+clock_l2_path = null
+target_double_door_path = null
+interact_zone_path = null
+interact_zone_l2_path = null
+l2_visible_dimension = null
+target_hour = null
+start_hour_l1 = null
+start_hour_l2 = null
+hour_step = null
+safe_room_zone_path = null
+inner_clock_path = null
+inner_clock_zone_path = null
+inner_start_step = null
+inner_target_step = null
+safe_room_entry_threshold_x = null
+wall_focus_idle_seconds = null
 
 [node name="ClockStationRemembered" type="Node3D" parent="TwoClocksPuzzle" unique_id=596045851]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20.247774, 0, 0.3153515)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 24.51995, 0, 0.3153515)
 script = ExtResource("55_rcc8y")
 
 [node name="ClockStationForgotten" type="Node3D" parent="TwoClocksPuzzle" unique_id=1074346217]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.8, 0, 1.2)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 41.8, 0, 0.2417829)
 script = ExtResource("55_rcc8y")
 active_dimension = "Forgotten"
 start_hour = 9
+
+[node name="TembokKebelah" type="Node3D" parent="." unique_id=1982002000]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 94.56, 9.4, 2.125)
+script = ExtResource("57_tembok")
+jarak_belah = 3.6
+durasi_animasi = 1.6
+requires_relic_unlock = true
+kekuatan_shake = 0.28
+
+[node name="TembokKiri" type="Node3D" parent="TembokKebelah" unique_id=1982002001]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.75)
+
+[node name="Mesh" type="MeshInstance3D" parent="TembokKebelah/TembokKiri" unique_id=1982002002]
+mesh = SubResource("BoxMesh_sliding_wall")
+
+[node name="AnimatableBody3D" type="AnimatableBody3D" parent="TembokKebelah/TembokKiri" unique_id=1982002003]
+collision_mask = 0
+sync_to_physics = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TembokKebelah/TembokKiri/AnimatableBody3D" unique_id=1982002004]
+shape = SubResource("BoxShape3D_sliding_wall")
+
+[node name="TembokKanan" type="Node3D" parent="TembokKebelah" unique_id=1982002005]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.75)
+
+[node name="Mesh" type="MeshInstance3D" parent="TembokKebelah/TembokKanan" unique_id=1982002006]
+mesh = SubResource("BoxMesh_sliding_wall")
+
+[node name="AnimatableBody3D" type="AnimatableBody3D" parent="TembokKebelah/TembokKanan" unique_id=1982002007]
+collision_mask = 0
+sync_to_physics = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TembokKebelah/TembokKanan/AnimatableBody3D" unique_id=1982002008]
+shape = SubResource("BoxShape3D_sliding_wall")
+
+[node name="PartikelDebu" type="GPUParticles3D" parent="TembokKebelah" unique_id=1982002009]
+emitting = false
+amount = 48
+lifetime = 1.2
+
+[node name="TriggerArea" type="Area3D" parent="TembokKebelah" unique_id=1982002010]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, -1, 0)
+collision_layer = 0
+collision_mask = 3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TembokKebelah/TriggerArea" unique_id=1982002011]
+shape = SubResource("BoxShape3D_sliding_trigger")
+
+[node name="TembokKebelahDepan" type="Node3D" parent="." unique_id=1982003000]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 58.85, 9.5, 0.225)
+script = ExtResource("57_tembok")
+jarak_belah = 2.45
+durasi_animasi = 1.6
+requires_relic_unlock = true
+kekuatan_shake = 0.28
+
+[node name="TembokKiri" type="Node3D" parent="TembokKebelahDepan" unique_id=1982003001]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -1.17)
+
+[node name="Mesh" type="MeshInstance3D" parent="TembokKebelahDepan/TembokKiri" unique_id=1982003002]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.105213165, 0, 0)
+mesh = SubResource("BoxMesh_sliding_wall_front")
+
+[node name="AnimatableBody3D" type="AnimatableBody3D" parent="TembokKebelahDepan/TembokKiri" unique_id=1982003003]
+collision_mask = 0
+sync_to_physics = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TembokKebelahDepan/TembokKiri/AnimatableBody3D" unique_id=1982003004]
+shape = SubResource("BoxShape3D_sliding_wall_front")
+
+[node name="TembokKanan" type="Node3D" parent="TembokKebelahDepan" unique_id=1982003005]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1.17)
+
+[node name="Mesh" type="MeshInstance3D" parent="TembokKebelahDepan/TembokKanan" unique_id=1982003006]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.031440735, 0, 0)
+mesh = SubResource("BoxMesh_sliding_wall_front")
+
+[node name="AnimatableBody3D" type="AnimatableBody3D" parent="TembokKebelahDepan/TembokKanan" unique_id=1982003007]
+collision_mask = 0
+sync_to_physics = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TembokKebelahDepan/TembokKanan/AnimatableBody3D" unique_id=1982003008]
+shape = SubResource("BoxShape3D_sliding_wall_front")
+
+[node name="PartikelDebu" type="GPUParticles3D" parent="TembokKebelahDepan" unique_id=1982003009]
+emitting = false
+amount = 48
+lifetime = 1.2
+
+[node name="TriggerArea" type="Area3D" parent="TembokKebelahDepan" unique_id=1982003010]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0)
+collision_layer = 0
+collision_mask = 3
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TembokKebelahDepan/TriggerArea" unique_id=1982003011]
+shape = SubResource("BoxShape3D_sliding_trigger_front")
 
 [node name="DoorPortal" type="Area3D" parent="." unique_id=1635775709 node_paths=PackedStringArray("door_inner_glow", "interaction_prompt")]
 transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 174.4, 8.76, 4.7)
@@ -1616,6 +1912,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.2, 0)
 shape = SubResource("BoxShape3D_door_portal")
 
 [node name="WoodenDoor" parent="DoorPortal" unique_id=1982001002 instance=ExtResource("3_1bvp3")]
+transform = Transform3D(2.356028, 0, 7.1054274e-15, 0, 2.356028, 0, -7.1054274e-15, 0, 2.356028, 0, -2.5404377, 0)
 
 [node name="DoorInnerGlow" type="OmniLight3D" parent="DoorPortal" unique_id=1982001003]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, -0.8)
@@ -1624,7 +1921,7 @@ light_energy = 0.0
 omni_range = 10.0
 
 [node name="InteractionPrompt" type="Label3D" parent="DoorPortal" unique_id=1982001004]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 0.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.2381096, 0.3999939)
 billboard = 1
 modulate = Color(1, 0.94, 0.72, 1)
 outline_modulate = Color(0.03, 0.02, 0.05, 0.95)
@@ -1637,6 +1934,196 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.2, 1.4)
 light_color = Color(1, 0.84, 0.56, 1)
 light_energy = 3.2
 omni_range = 12.0
+
+[node name="TheEraserWaypoints" type="Node3D" parent="." unique_id=2147217273]
+
+[node name="WP_1" type="Marker3D" parent="TheEraserWaypoints" unique_id=1323394357]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 51.24, 0, -4.57)
+
+[node name="WP_2" type="Marker3D" parent="TheEraserWaypoints" unique_id=1747625308]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 53, 0, 4.5)
+
+[node name="WP_3" type="Marker3D" parent="TheEraserWaypoints" unique_id=1970335921]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 61, 0, 4.5)
+
+[node name="WP_4" type="Marker3D" parent="TheEraserWaypoints" unique_id=1259444071]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 59, 0, -7.5)
+
+[node name="TheEraserMemoryAnchors" type="Node3D" parent="." unique_id=1994143095]
+
+[node name="AnchorRemembered" type="Marker3D" parent="TheEraserMemoryAnchors" unique_id=2036550643]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 57.5, 0.4, -11.5)
+
+[node name="AnchorForgotten" type="Marker3D" parent="TheEraserMemoryAnchors" unique_id=928409178]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 62, 0.4, 9.2)
+
+[node name="NavigationRegion3D" type="NavigationRegion3D" parent="." unique_id=762351969]
+navigation_mesh = ExtResource("61_b0qjk")
+
+[node name="CutsceneCamTarget" type="Marker3D" parent="." unique_id=1795515605]
+transform = Transform3D(0.9348358, -0.13925532, -0.32663435, 0, 0.9198886, -0.39217976, 0.35508034, 0.36662367, 0.8599448, 49.2, 1.05, 0.8)
+
+[node name="MonsterRevealTrigger" type="Area3D" parent="." unique_id=302437296]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48.2, 1.5, 2.5)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("62_wbmf0")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MonsterRevealTrigger" unique_id=1258625406]
+shape = SubResource("BoxShape3D_rcc8y")
+
+[node name="ConsciousnessLayer" type="CanvasLayer" parent="." unique_id=1448228852]
+layer = 90
+
+[node name="TopEyelid" type="ColorRect" parent="ConsciousnessLayer" unique_id=1772847577]
+anchors_preset = -1
+anchor_top = -0.55
+anchor_right = 1.0
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="BottomEyelid" type="ColorRect" parent="ConsciousnessLayer" unique_id=202081037]
+anchors_preset = -1
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.55
+mouse_filter = 2
+color = Color(0, 0, 0, 1)
+
+[node name="TableHideZone" type="Area3D" parent="." unique_id=608529070]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 68.8, 0.85, 2)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("63_rcc8y")
+inside_point_path = NodePath("")
+exit_point_path = NodePath("")
+peek_cam_point_path = NodePath("")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="TableHideZone" unique_id=1550738321]
+shape = SubResource("BoxShape3D_cd4dd")
+
+[node name="WardrobeHideSpot" type="Area3D" parent="." unique_id=1704972808]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 48.1, 1.2, 2)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("63_rcc8y")
+hide_mode = 1
+spot_display_name = "Lemari"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WardrobeHideSpot" unique_id=547943644]
+shape = SubResource("BoxShape3D_sjx5g")
+
+[node name="HideInsidePoint" type="Marker3D" parent="WardrobeHideSpot" unique_id=1793855826]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.75, -1.2, 0)
+
+[node name="ExitPoint" type="Marker3D" parent="WardrobeHideSpot" unique_id=321688608]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.1, -1.05, 0)
+
+[node name="PeekCamPoint" type="Marker3D" parent="WardrobeHideSpot" unique_id=1095305692]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, -0.65, 0.3, 0)
+
+[node name="RelicSocketZone" type="Area3D" parent="." unique_id=490071417]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 93.1, 6.3, 2.125)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("65_y8k7t")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="RelicSocketZone" unique_id=1847013740]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.2, 0)
+shape = SubResource("SphereShape3D_d7d62")
+
+[node name="SocketBeaconLight" type="OmniLight3D" parent="RelicSocketZone" unique_id=273619035]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.95, 1.6, 0)
+light_color = Color(1, 0.84, 0.5, 1)
+light_energy = 1.4
+omni_range = 6.0
+
+[node name="SocketAltarPoint_1" type="Marker3D" parent="RelicSocketZone" unique_id=764002089]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2200012, 7.1397734, -1.5948429)
+
+[node name="SocketAltarPoint_2" type="Marker3D" parent="RelicSocketZone" unique_id=951288388]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2200012, 7.283024, 0)
+
+[node name="SocketAltarPoint_3" type="Marker3D" parent="RelicSocketZone" unique_id=348489980]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.2200012, 7.2075195, 1.9445157)
+
+[node name="Floor1_Anchors" type="Node3D" parent="." unique_id=407016997]
+
+[node name="F1_Anchor_1" type="Marker3D" parent="Floor1_Anchors" unique_id=389120789]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 51.24, 0, -4.57)
+
+[node name="F1_Anchor_2" type="Marker3D" parent="Floor1_Anchors" unique_id=1408249051]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54.5, 0, 6.5)
+
+[node name="F1_Anchor_3" type="Marker3D" parent="Floor1_Anchors" unique_id=144145561]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 61.5, 0, 4.5)
+
+[node name="F1_Anchor_4" type="Marker3D" parent="Floor1_Anchors" unique_id=1179293841]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 79.5, 0, -4.5)
+
+[node name="Floor2_Anchors" type="Node3D" parent="." unique_id=1117914692]
+
+[node name="F2_Anchor_1" type="Marker3D" parent="Floor2_Anchors" unique_id=198778392]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 52.5, 6.3, -4.5)
+
+[node name="F2_Anchor_2" type="Marker3D" parent="Floor2_Anchors" unique_id=1505608274]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 61, 6.3, 3.5)
+
+[node name="F2_Anchor_3" type="Marker3D" parent="Floor2_Anchors" unique_id=1572431714]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 74, 6.3, -0.5)
+
+[node name="F2_Anchor_4" type="Marker3D" parent="Floor2_Anchors" unique_id=1175959082]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 85.5, 6.3, 2.5)
+
+[node name="WallClocksPuzzle" type="Node3D" parent="." unique_id=703573103]
+script = ExtResource("54_3x87c")
+clock_l1_path = NodePath("../Sketchfab_Scene15")
+clock_l2_path = NodePath("../Sketchfab_Scene6")
+target_double_door_path = NodePath("../TembokKebelahDepan")
+safe_room_zone_path = NodePath("SafeRoomZone")
+inner_clock_path = NodePath("../Sketchfab_Scene13")
+inner_clock_zone_path = NodePath("InnerClockInteractZone")
+wall_focus_idle_seconds = null
+
+[node name="ClockL1InteractZone" type="Area3D" parent="WallClocksPuzzle" unique_id=364194212]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 83.61, 1, -11.3)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallClocksPuzzle/ClockL1InteractZone" unique_id=538493657]
+shape = SubResource("BoxShape3D_y8k7t")
+
+[node name="ClockL2InteractZone" type="Area3D" parent="WallClocksPuzzle" unique_id=90852241]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 84.75, 7.3, -12.2)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallClocksPuzzle/ClockL2InteractZone" unique_id=932231456]
+shape = SubResource("BoxShape3D_g47qq")
+
+[node name="SafeRoomZone" type="Area3D" parent="WallClocksPuzzle" unique_id=1153111281]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 51.85, 9.5, -0.2)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallClocksPuzzle/SafeRoomZone" unique_id=1937720261]
+shape = SubResource("BoxShape3D_d7d62")
+
+[node name="InnerClockInteractZone" type="Area3D" parent="WallClocksPuzzle" unique_id=2066716349]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 52.4, 7.4, -9.2)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallClocksPuzzle/InnerClockInteractZone" unique_id=1909905977]
+shape = SubResource("BoxShape3D_r58ga")
 
 [editable path="pintu/Sketchfab_Scene"]
 [editable path="pintu2/Sketchfab_Scene"]

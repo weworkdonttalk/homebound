@@ -113,8 +113,21 @@ class_name CinematicCameraRig
 
 ## Mode Telekinesis 3D (saat true, CameraRig pause dan menyerahkan kendali pada TelekinesisCamera3D)
 @export var is_telekinesis_mode: bool = false
+## Override penuh saat cutscene / jumpscare agar CameraRig tidak menimpa posisi/rotasi/bounds
+@export var is_cutscene_override: bool = false
+
+@export_group("Chase Camera Shake")
+@export var max_chase_shake_offset: float = 0.045
+@export var max_chase_shake_roll_deg: float = 1.2
+@export var chase_shake_frequency: float = 14.0
+var chase_shake_intensity: float = 0.0
 
 @onready var camera: Camera3D = $Camera3D
+
+var _chase_shake_time: float = 0.0
+var _current_chase_h: float = 0.0
+var _current_chase_v: float = 0.0
+var _current_chase_roll: float = 0.0
 
 var _camera_anchor: Vector3 = Vector3(-56.5, 8.8, 27.5)
 var _is_focusing: bool = false
@@ -323,6 +336,9 @@ func set_telekinesis_mode(_val: bool) -> void:
 
 
 func _process(delta: float) -> void:
+	if is_cutscene_override:
+		return
+	_update_chase_shake(delta)
 	_update_wall_occlusion(delta)
 	if _is_focusing or target == null:
 		return
@@ -430,12 +446,40 @@ func _process(delta: float) -> void:
 				xform_25d.origin.lerp(chase_xform.origin, smooth_b)
 			)
 			if camera:
-				camera.rotation_degrees = Vector3(0.0, 0.0, sway_roll * (1.0 - smooth_b * 0.6))
+				camera.rotation_degrees = Vector3(0.0, 0.0, sway_roll * (1.0 - smooth_b * 0.6) + _current_chase_roll)
 			return
 
 	global_transform = Transform3D(Basis.IDENTITY, pos_25d)
 	if camera:
-		camera.rotation_degrees = Vector3(pitch_degrees, 0.0, sway_roll)
+		camera.rotation_degrees = Vector3(pitch_degrees, 0.0, sway_roll + _current_chase_roll)
+
+
+func _update_chase_shake(delta: float) -> void:
+	var intensity := clampf(chase_shake_intensity, 0.0, 1.0)
+	if intensity > 0.001:
+		_chase_shake_time += delta * chase_shake_frequency
+		var target_h := (sin(_chase_shake_time * 1.15) * 0.65 + sin(_chase_shake_time * 2.3) * 0.35) * max_chase_shake_offset * intensity
+		var target_v := (absf(sin(_chase_shake_time)) * -0.75 + sin(_chase_shake_time * 2.0) * 0.35) * max_chase_shake_offset * intensity
+		var target_roll := sin(_chase_shake_time * 0.9) * max_chase_shake_roll_deg * intensity
+		var blend := 1.0 - exp(-18.0 * delta)
+		_current_chase_h = lerpf(_current_chase_h, target_h, blend)
+		_current_chase_v = lerpf(_current_chase_v, target_v, blend)
+		_current_chase_roll = lerpf(_current_chase_roll, target_roll, blend)
+	else:
+		var decay := 1.0 - exp(-10.0 * delta)
+		_current_chase_h = lerpf(_current_chase_h, 0.0, decay)
+		_current_chase_v = lerpf(_current_chase_v, 0.0, decay)
+		_current_chase_roll = lerpf(_current_chase_roll, 0.0, decay)
+		if absf(_current_chase_h) < 0.0002:
+			_current_chase_h = 0.0
+		if absf(_current_chase_v) < 0.0002:
+			_current_chase_v = 0.0
+		if absf(_current_chase_roll) < 0.002:
+			_current_chase_roll = 0.0
+
+	if camera:
+		camera.h_offset = _current_chase_h
+		camera.v_offset = _current_chase_v
 
 
 # =========================================================================
